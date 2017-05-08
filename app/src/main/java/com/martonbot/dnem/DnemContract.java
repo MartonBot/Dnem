@@ -1,5 +1,8 @@
 package com.martonbot.dnem;
 
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
 /**
@@ -31,37 +34,36 @@ public class DnemContract {
         public static final String COLUMN_NAME_IS_DONE = "is_done";
     }
 
-    private static final String SQL_CREATE_ACTIVITY =
+    static final String SQL_CREATE_ACTIVITY =
             "CREATE TABLE " + Activity.TABLE_NAME + " (" +
                     Activity._ID + " INTEGER PRIMARY KEY," +
                     Activity.COLUMN_NAME_LABEL + " TEXT," +
                     Activity.COLUMN_NAME_ICON + " TEXT," +
                     Activity.COLUMN_NAME_DESCRIPTION + " TEXT)";
 
-    private static final String SQL_CREATE_SCHEDULE =
+    static final String SQL_CREATE_SCHEDULE =
             "CREATE TABLE " + Schedule.TABLE_NAME + " (" +
                     Schedule._ID + " INTEGER PRIMARY KEY," +
                     Schedule.COLUMN_NAME_ACTIVITY_ID + " INTEGER," +
                     Schedule.COLUMN_NAME_IS_DAILY + " BOOLEAN," +
-                    Schedule.COLUMN_NAME_IS_ACTIVE + " BOOLEAN)" +
-                    "FOREIGN KEY(" + Schedule.COLUMN_NAME_ACTIVITY_ID + ") REFERENCES " + Activity.TABLE_NAME + "(" + Activity._ID + ")";
+                    Schedule.COLUMN_NAME_IS_ACTIVE + " BOOLEAN," +
+                    " FOREIGN KEY(" + Schedule.COLUMN_NAME_ACTIVITY_ID + ") REFERENCES " + Activity.TABLE_NAME + "(" + Activity._ID + "))";
 
-    private static final String SQL_CREATE_TRACKING_LOG =
+    static final String SQL_CREATE_TRACKING_LOG =
             "CREATE TABLE " + TrackingLog.TABLE_NAME + " (" +
                     TrackingLog._ID + " INTEGER PRIMARY KEY," +
                     TrackingLog.COLUMN_NAME_ACTIVITY_ID + " INTEGER," +
                     TrackingLog.COLUMN_NAME_DATE + " DATE," +
-                    TrackingLog.COLUMN_NAME_IS_DONE + " BOOLEAN)" +
-                    "FOREIGN KEY(" + TrackingLog.COLUMN_NAME_ACTIVITY_ID + ") REFERENCES " + Activity.TABLE_NAME + "(" + Activity._ID + ")";
+                    TrackingLog.COLUMN_NAME_IS_DONE + " BOOLEAN," +
+                    " FOREIGN KEY(" + TrackingLog.COLUMN_NAME_ACTIVITY_ID + ") REFERENCES " + Activity.TABLE_NAME + "(" + Activity._ID + "))";
 
-    private static final String SQL_DELETE_ACTIVITY =
+    static final String SQL_DELETE_ACTIVITY =
             "DROP TABLE IF EXISTS " + Activity.TABLE_NAME;
 
-    private static final String SQL_DELETE_SCHEDULE =
+    static final String SQL_DELETE_SCHEDULE =
             "DROP TABLE IF EXISTS " + Schedule.TABLE_NAME;
 
-    private static final String SQL_DELETE_TRACKING_LOG =
+    static final String SQL_DELETE_TRACKING_LOG =
             "DROP TABLE IF EXISTS " + TrackingLog.TABLE_NAME;
-
 
 }

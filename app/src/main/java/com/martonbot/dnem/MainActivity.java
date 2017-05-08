@@ -13,11 +13,12 @@ import android.widget.Toast;
 public class MainActivity extends AppCompatActivity {
 
     private ListView listView;
-    ListAdapter listAdapter;
+    private ListAdapter listAdapter;
 
     private Cursor cursor;
+    private DnemDbHelper dbHelper;
 
-    private String[] stringArray = new String[] {"name"}; // the column names
+    private String[] stringArray = new String[] {DnemContract.Activity.COLUMN_NAME_LABEL}; // the column names
     private int[] intArray = new int[] {R.id.textView}; // the views IDs
 
     @Override
@@ -33,9 +34,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        dbHelper = new DnemDbHelper(MainActivity.this);
+        String[] queryProjection = {
+                DnemContract.Activity._ID,
+                DnemContract.Activity.COLUMN_NAME_LABEL
+        };
+
+        cursor = dbHelper.getWritableDatabase().query(DnemContract.Activity.TABLE_NAME, queryProjection, null, null, null, null, null);
+
         listView = (ListView) findViewById(R.id.listView);
-        
-        listAdapter = new SimpleCursorAdapter(MainActivity.this, R.layout.list_item, null, stringArray, intArray, 0);
+
+        listAdapter = new SimpleCursorAdapter(MainActivity.this, R.layout.list_item, cursor, stringArray, intArray, 0);
 
         listView.setAdapter(listAdapter);
     }
