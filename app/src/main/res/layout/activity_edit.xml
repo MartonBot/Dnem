@@ -7,34 +7,137 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:background="@color/primary_dark"
-    tools:context="com.martonbot.dnem.EditActivity">
+    tools:context="com.martonbot.dnem.EditActivity"
+    android:background="@color/primary_light">
 
-    <EditText
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="@color/primary_text"
-        android:id="@+id/label_edit" />
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:id="@+id/main_container">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="CANCEL"
-        android:id="@+id/cancel_button"
-        android:background="@color/primary_light"
-        android:textColor="@color/primary_text"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true"/>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/save_cancel_section">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/cancel_button"
-        android:text="SAVE"
-        android:id="@+id/save_button"
-        android:background="@color/primary_light"
-        android:textColor="@color/primary_text"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"/>
+            <Button
+                style="@style/Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="CANCEL"
+                android:id="@+id/cancel_button"
+                android:layout_weight="1" />
+
+            <Button
+                style="@style/Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="SAVE"
+                android:id="@+id/save_button"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/label_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="5dp">
+
+            <TextView
+                style="@style/SettingsHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/label"
+                android:id="@+id/label_label" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end">
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/label_edit" />
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/details_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="5dp">
+
+            <TextView
+                style="@style/SettingsHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="DETAILS"
+                android:id="@+id/details_label" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end">
+
+                <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/details_edit" />
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/scheduled_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="5dp">
+
+            <TextView
+                style="@style/SettingsHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="SCHEDULED"
+                android:id="@+id/scheduled_label" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end">
+
+                <TextView
+                    android:id="@+id/scheduled_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:padding="5dp"
+                    android:text="YES"
+                    style="@style/SettingsText" />
+
+                <Switch
+                    android:id="@+id/schedule_activity_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@+id/scheduled_text"
+                    android:layout_alignTop="@+id/scheduled_text"
+                    android:layout_toEndOf="@+id/scheduled_text"
+                    android:gravity="center_vertical"
+                    android:padding="5dp" />
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
 
 </RelativeLayout>

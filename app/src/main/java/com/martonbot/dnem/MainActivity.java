@@ -19,17 +19,21 @@ public class MainActivity extends AppCompatActivity {
     private Cursor cursor;
     private DnemDbHelper dbHelper;
 
-    private String[] stringArray = new String[]{DnemContract.Activity.COLUMN_NAME_LABEL}; // the column names
-    private int[] intArray = new int[]{R.id.label_text};
+    private String[] stringArray = new String[]{
+            DnemContract.Activity.COLUMN_NAME_LABEL,
+            DnemContract.Activity.COLUMN_NAME_DETAILS,
+    }; // the column names
+    private int[] intArray = new int[]{
+            R.id.label_text,
+            R.id.details_text
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         listView = (ListView) findViewById(R.id.listView);
-
 
     }
 
@@ -47,12 +51,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
         dbHelper = new DnemDbHelper(MainActivity.this);
+        String joinTable = DnemContract.Activity.TABLE_NAME + " JOIN " + DnemContract.Schedule.TABLE_NAME + " ON " + DnemContract.Activity.TABLE_NAME + "." + DnemContract.Activity._ID + " = " + DnemContract.Schedule.COLUMN_NAME_ACTIVITY_ID;
         String[] queryProjection = {
-                DnemContract.Activity._ID,
-                DnemContract.Activity.COLUMN_NAME_LABEL
+                DnemContract.Activity.TABLE_NAME + "." + DnemContract.Activity._ID,
+                DnemContract.Activity.COLUMN_NAME_LABEL,
+                DnemContract.Activity.COLUMN_NAME_DETAILS,
+                DnemContract.Schedule.COLUMN_NAME_IS_ACTIVE
         };
 
-        cursor = dbHelper.getWritableDatabase().query(DnemContract.Activity.TABLE_NAME, queryProjection, null, null, null, null, null);
+        String querySelection = DnemContract.Schedule.COLUMN_NAME_IS_ACTIVE + " = ?";
+        String[] activitySelectionArgs = {
+                "true"
+        };
+
+        cursor = dbHelper.getWritableDatabase().query(joinTable, queryProjection, null, null, null, null, null);
 
         listAdapter = new SimpleCursorAdapter(MainActivity.this, R.layout.list_item, cursor, stringArray, intArray, 0);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {

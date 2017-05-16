@@ -1,13 +1,7 @@
 package com.martonbot.dnem;
 
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.provider.BaseColumns;
 
-/**
- * Created by mgrihangne on 4/05/2017.
- */
 public class DnemContract {
 
     private DnemContract() {
@@ -17,7 +11,7 @@ public class DnemContract {
         public static final String TABLE_NAME = "activity";
         public static final String COLUMN_NAME_LABEL = "label";
         public static final String COLUMN_NAME_ICON = "icon";
-        public static final String COLUMN_NAME_DESCRIPTION = "description";
+        public static final String COLUMN_NAME_DETAILS = "details";
     }
 
     public static class Schedule implements BaseColumns {
@@ -39,7 +33,7 @@ public class DnemContract {
                     Activity._ID + " INTEGER PRIMARY KEY," +
                     Activity.COLUMN_NAME_LABEL + " TEXT," +
                     Activity.COLUMN_NAME_ICON + " TEXT," +
-                    Activity.COLUMN_NAME_DESCRIPTION + " TEXT)";
+                    Activity.COLUMN_NAME_DETAILS + " TEXT)";
 
     static final String SQL_CREATE_SCHEDULE =
             "CREATE TABLE " + Schedule.TABLE_NAME + " (" +
