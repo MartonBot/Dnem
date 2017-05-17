@@ -3,41 +3,41 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/primary_light"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.martonbot.dnem.EditActivity"
-    android:background="@color/primary_light">
+    tools:context="com.martonbot.dnem.EditActivity">
 
     <LinearLayout
+        android:id="@+id/main_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:orientation="vertical"
-        android:id="@+id/main_container">
+        android:orientation="vertical">
 
         <LinearLayout
-            android:orientation="horizontal"
+            android:id="@+id/save_cancel_section"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/save_cancel_section">
+            android:orientation="horizontal">
 
             <Button
-                style="@style/Button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="CANCEL"
                 android:id="@+id/cancel_button"
-                android:layout_weight="1" />
-
-            <Button
                 style="@style/Button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SAVE"
+                android:layout_weight="1"
+                android:text="CANCEL" />
+
+            <Button
                 android:id="@+id/save_button"
-                android:layout_weight="1" />
+                style="@style/Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="SAVE" />
         </LinearLayout>
 
         <LinearLayout
@@ -48,11 +48,11 @@
             android:padding="5dp">
 
             <TextView
+                android:id="@+id/label_label"
                 style="@style/SettingsHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/label"
-                android:id="@+id/label_label" />
+                android:text="@string/label" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -60,9 +60,12 @@
                 android:gravity="end">
 
                 <EditText
+                    android:id="@+id/label_edit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/label_edit" />
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:nextFocusForward="@+id/details_edit" />
 
             </RelativeLayout>
 
@@ -76,11 +79,11 @@
             android:padding="5dp">
 
             <TextView
+                android:id="@+id/details_label"
                 style="@style/SettingsHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="DETAILS"
-                android:id="@+id/details_label" />
+                android:text="DETAILS" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -88,9 +91,12 @@
                 android:gravity="end">
 
                 <EditText
+                    android:id="@+id/details_edit"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/details_edit" />
+                    android:inputType="text"
+                    android:maxLines="1"
+                    android:nextFocusForward="@+id/schedule_activity_switch" />
 
             </RelativeLayout>
 
@@ -104,11 +110,11 @@
             android:padding="5dp">
 
             <TextView
+                android:id="@+id/scheduled_label"
                 style="@style/SettingsHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="SCHEDULED"
-                android:id="@+id/scheduled_label" />
+                android:text="SCHEDULED" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -117,12 +123,12 @@
 
                 <TextView
                     android:id="@+id/scheduled_text"
+                    style="@style/SettingsText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:padding="5dp"
-                    android:text="YES"
-                    style="@style/SettingsText" />
+                    android:text="YES" />
 
                 <Switch
                     android:id="@+id/schedule_activity_switch"
@@ -137,6 +143,14 @@
             </RelativeLayout>
 
         </LinearLayout>
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/delete_button"
+            android:padding="5dp"
+            android:background="@drawable/ic_delete_black_24dp"
+            android:layout_gravity="right" />
 
     </LinearLayout>
 

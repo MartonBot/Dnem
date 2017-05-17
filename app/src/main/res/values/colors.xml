@@ -8,4 +8,14 @@
     <color name="secondary_text">#757575</color>
     <color name="icons">#212121</color>
     <color name="divider">#BDBDBD</color>
+    <color name="transparent">#00000000</color>
+
+
+    <color name="item_enabled">@color/primary_dark</color>
+    <color name="item_disabled">@color/primary_light</color>
+
+    <color name="text_enabled">@color/primary_text</color>
+    <color name="text_disabled">@color/secondary_text</color>
+
+
 </resources>

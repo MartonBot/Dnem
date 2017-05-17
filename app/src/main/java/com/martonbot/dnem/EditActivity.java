@@ -3,11 +3,12 @@ package com.martonbot.dnem;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
@@ -18,6 +19,7 @@ public class EditActivity extends AppCompatActivity {
     private EditText labelEdit;
     private EditText detailsEdit;
     private Switch scheduleActivitySwitch;
+    private ImageButton deleteButton;
 
     private SQLiteDatabase db;
     private long activityId = 0;
@@ -37,6 +39,7 @@ public class EditActivity extends AppCompatActivity {
         labelEdit = (EditText) findViewById(R.id.label_edit);
         detailsEdit = (EditText) findViewById(R.id.details_edit);
         scheduleActivitySwitch = (Switch) findViewById(R.id.schedule_activity_switch);
+        deleteButton = (ImageButton) findViewById(R.id.delete_button);
 
         // create the database to read and write
         db = new DnemDbHelper(EditActivity.this).getWritableDatabase();
@@ -47,6 +50,7 @@ public class EditActivity extends AppCompatActivity {
         // controls listeners
         cancelButton.setOnClickListener(new CancelButtonOnClickListener());
         saveButton.setOnClickListener(new SaveButtonOnClickListener());
+        deleteButton.setOnClickListener(new DeleteButtonOnClickListener());
 
     }
 
@@ -76,11 +80,14 @@ public class EditActivity extends AppCompatActivity {
 
         // if we find a result
         if (cursor.moveToNext()) {
-            labelEdit.setText(cursor.getString(1));
-            detailsEdit.setText(cursor.getString(2));
+            int labelIndex = cursor.getColumnIndex(DnemContract.Activity.COLUMN_NAME_LABEL);
+            int detailsIndex = cursor.getColumnIndex(DnemContract.Activity.COLUMN_NAME_DETAILS);
+            int scheduledIndex = cursor.getColumnIndex(DnemContract.Schedule.COLUMN_NAME_IS_ACTIVE);
+            labelEdit.setText(cursor.getString(labelIndex));
+            detailsEdit.setText(cursor.getString(detailsIndex));
+            scheduleActivitySwitch.setChecked(cursor.getInt(scheduledIndex) > 0);
         } else {
-            // there's something wrong with the database
-
+            // throw new IllegalStateException("No activity corresponding to this ID");
         }
 
         cursor.close();
@@ -114,6 +121,28 @@ public class EditActivity extends AppCompatActivity {
         }
     }
 
+    private class DeleteButtonOnClickListener implements View.OnClickListener {
+
+        @Override
+        public void onClick(View v) {
+            // delete the activity if it exists
+            if (activityId != 0) {
+                db.beginTransaction();
+                try {
+                    deleteActivity();
+                    db.setTransactionSuccessful();
+                }
+                catch (Exception e) {
+                } finally {
+                    db.endTransaction();
+                }
+            }
+
+            // leave activity
+            finish();
+        }
+    }
+
     private void saveActivity() throws Exception {
 
         // Activity
@@ -136,7 +165,7 @@ public class EditActivity extends AppCompatActivity {
         };
 
         if (activityId != 0) {
-
+            // update
             int activityCount = db.update(
                     DnemContract.Activity.TABLE_NAME,
                     activityValues,
@@ -150,12 +179,13 @@ public class EditActivity extends AppCompatActivity {
                     scheduleSelectionArgs);
 
             if (activityCount != scheduleCount) {
-                throw  new Exception("Illegal database state");
+                throw new Exception("Illegal database state");
             }
 
             //debug
             Toast.makeText(EditActivity.this, activityCount + " rows updated", Toast.LENGTH_SHORT).show();
         } else {
+            // insert
             long newActivityId = db.insert(
                     DnemContract.Activity.TABLE_NAME,
                     null,
@@ -171,5 +201,25 @@ public class EditActivity extends AppCompatActivity {
             // debug
             Toast.makeText(EditActivity.this, "activity created", Toast.LENGTH_SHORT).show();
         }
+    }
+    private void deleteActivity() throws Exception {
+        String activitySelection = DnemContract.Activity._ID + " = ?";
+        String[] activitySelectionArgs = {
+                "" + activityId
+        };
+
+        String scheduleSelection = DnemContract.Schedule.COLUMN_NAME_ACTIVITY_ID + " = ?";
+        String[] scheduleSelectionArgs = {
+                "" + activityId
+        };
+        db.delete(DnemContract.Schedule.TABLE_NAME,
+                scheduleSelection,
+                activitySelectionArgs);
+
+        db.delete(DnemContract.Activity.TABLE_NAME,
+                activitySelection,
+                activitySelectionArgs);
+
+        Toast.makeText(EditActivity.this, "deleted", Toast.LENGTH_SHORT).show();
     }
 }
