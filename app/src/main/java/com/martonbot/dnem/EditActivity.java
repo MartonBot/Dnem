@@ -12,6 +12,10 @@ import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import com.martonbot.dnem.Dnem.Activity;
+import com.martonbot.dnem.Dnem.Schedule;
+import com.martonbot.dnem.Dnem.TrackingLog;
+
 public class EditActivity extends AppCompatActivity {
 
     private Button cancelButton;
@@ -58,16 +62,16 @@ public class EditActivity extends AppCompatActivity {
 
         // get data from the join between activity and schedule
         String[] projection = {
-                DnemContract.Activity.TABLE_NAME + "." + DnemContract.Activity._ID,
-                DnemContract.Activity.COLUMN_NAME_LABEL,
-                DnemContract.Activity.COLUMN_NAME_DETAILS,
-                DnemContract.Schedule.COLUMN_NAME_IS_ACTIVE
+                Activity.T_NAME + "." + Activity._ID,
+                Activity.C_LABEL,
+                Activity.C_DETAILS,
+                Schedule.C_IS_ACTIVE
         };
-        String selection = DnemContract.Activity.TABLE_NAME + "." + DnemContract.Activity._ID + " = ?";
+        String selection = Activity.T_NAME + "." + Activity._ID + " = ?";
         String[] selectionArgs = {
                 "" + activityId
         };
-        String joinTable = DnemContract.Activity.TABLE_NAME + " JOIN " + DnemContract.Schedule.TABLE_NAME + " ON " + DnemContract.Activity.TABLE_NAME + "." + DnemContract.Activity._ID + " = " + DnemContract.Schedule.COLUMN_NAME_ACTIVITY_ID;
+        String joinTable = Activity.T_NAME + " JOIN " + Schedule.T_NAME + " ON " + Activity.T_NAME + "." + Activity._ID + " = " + Schedule.C_ACTIVITY_ID;
         Cursor cursor = db.query(
                 joinTable,
                 projection,
@@ -80,9 +84,9 @@ public class EditActivity extends AppCompatActivity {
 
         // if we find a result
         if (cursor.moveToNext()) {
-            int labelIndex = cursor.getColumnIndex(DnemContract.Activity.COLUMN_NAME_LABEL);
-            int detailsIndex = cursor.getColumnIndex(DnemContract.Activity.COLUMN_NAME_DETAILS);
-            int scheduledIndex = cursor.getColumnIndex(DnemContract.Schedule.COLUMN_NAME_IS_ACTIVE);
+            int labelIndex = cursor.getColumnIndex(Activity.C_LABEL);
+            int detailsIndex = cursor.getColumnIndex(Activity.C_DETAILS);
+            int scheduledIndex = cursor.getColumnIndex(Schedule.C_IS_ACTIVE);
             labelEdit.setText(cursor.getString(labelIndex));
             detailsEdit.setText(cursor.getString(detailsIndex));
             scheduleActivitySwitch.setChecked(cursor.getInt(scheduledIndex) > 0);
@@ -131,8 +135,7 @@ public class EditActivity extends AppCompatActivity {
                 try {
                     deleteActivity();
                     db.setTransactionSuccessful();
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                 } finally {
                     db.endTransaction();
                 }
@@ -147,19 +150,19 @@ public class EditActivity extends AppCompatActivity {
 
         // Activity
         ContentValues activityValues = new ContentValues();
-        activityValues.put(DnemContract.Activity.COLUMN_NAME_LABEL, labelEdit.getText().toString());
-        activityValues.put(DnemContract.Activity.COLUMN_NAME_DETAILS, detailsEdit.getText().toString());
+        activityValues.put(Activity.C_LABEL, labelEdit.getText().toString());
+        activityValues.put(Activity.C_DETAILS, detailsEdit.getText().toString());
 
         // Schedule
         ContentValues scheduleValues = new ContentValues();
-        scheduleValues.put(DnemContract.Schedule.COLUMN_NAME_IS_ACTIVE, scheduleActivitySwitch.isChecked());
+        scheduleValues.put(Schedule.C_IS_ACTIVE, scheduleActivitySwitch.isChecked());
 
-        String activitySelection = DnemContract.Activity._ID + " = ?";
+        String activitySelection = Activity._ID + " = ?";
         String[] activitySelectionArgs = {
                 "" + activityId
         };
 
-        String scheduleSelection = DnemContract.Schedule.COLUMN_NAME_ACTIVITY_ID + " = ?";
+        String scheduleSelection = Schedule.C_ACTIVITY_ID + " = ?";
         String[] scheduleSelectionArgs = {
                 "" + activityId
         };
@@ -167,13 +170,13 @@ public class EditActivity extends AppCompatActivity {
         if (activityId != 0) {
             // update
             int activityCount = db.update(
-                    DnemContract.Activity.TABLE_NAME,
+                    Activity.T_NAME,
                     activityValues,
                     activitySelection,
                     activitySelectionArgs);
 
             int scheduleCount = db.update(
-                    DnemContract.Schedule.TABLE_NAME,
+                    Schedule.T_NAME,
                     scheduleValues,
                     scheduleSelection,
                     scheduleSelectionArgs);
@@ -187,14 +190,14 @@ public class EditActivity extends AppCompatActivity {
         } else {
             // insert
             long newActivityId = db.insert(
-                    DnemContract.Activity.TABLE_NAME,
+                    Activity.T_NAME,
                     null,
                     activityValues);
 
-            scheduleValues.put(DnemContract.Schedule.COLUMN_NAME_ACTIVITY_ID, newActivityId);
+            scheduleValues.put(Schedule.C_ACTIVITY_ID, newActivityId); // this is where we set the foreign key
 
             long newScheduleId = db.insert(
-                    DnemContract.Schedule.TABLE_NAME,
+                    Schedule.T_NAME,
                     null,
                     scheduleValues);
 
@@ -202,21 +205,22 @@ public class EditActivity extends AppCompatActivity {
             Toast.makeText(EditActivity.this, "activity created", Toast.LENGTH_SHORT).show();
         }
     }
+
     private void deleteActivity() throws Exception {
-        String activitySelection = DnemContract.Activity._ID + " = ?";
+        String activitySelection = Activity._ID + " = ?";
         String[] activitySelectionArgs = {
                 "" + activityId
         };
 
-        String scheduleSelection = DnemContract.Schedule.COLUMN_NAME_ACTIVITY_ID + " = ?";
+        String scheduleSelection = Schedule.C_ACTIVITY_ID + " = ?";
         String[] scheduleSelectionArgs = {
                 "" + activityId
         };
-        db.delete(DnemContract.Schedule.TABLE_NAME,
+        db.delete(Schedule.T_NAME,
                 scheduleSelection,
-                activitySelectionArgs);
+                scheduleSelectionArgs);
 
-        db.delete(DnemContract.Activity.TABLE_NAME,
+        db.delete(Activity.T_NAME,
                 activitySelection,
                 activitySelectionArgs);
 

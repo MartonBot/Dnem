@@ -19,18 +19,18 @@ public class DnemDbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(DnemContract.SQL_CREATE_ACTIVITY);
-        db.execSQL(DnemContract.SQL_CREATE_SCHEDULE);
-        db.execSQL(DnemContract.SQL_CREATE_TRACKING_LOG);
+        db.execSQL(Dnem.SQL_CREATE_ACTIVITY);
+        db.execSQL(Dnem.SQL_CREATE_SCHEDULE);
+        db.execSQL(Dnem.SQL_CREATE_TRACKING_LOG);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // This database is only a cache for online data, so its upgrade policy is
         // to simply to discard the data and start over
-        db.execSQL(DnemContract.SQL_DELETE_ACTIVITY);
-        db.execSQL(DnemContract.SQL_DELETE_SCHEDULE);
-        db.execSQL(DnemContract.SQL_DELETE_TRACKING_LOG);
+        db.execSQL(Dnem.SQL_DELETE_ACTIVITY);
+        db.execSQL(Dnem.SQL_DELETE_SCHEDULE);
+        db.execSQL(Dnem.SQL_DELETE_TRACKING_LOG);
         onCreate(db);
     }
 

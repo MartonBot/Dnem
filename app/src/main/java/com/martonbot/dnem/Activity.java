@@ -15,7 +15,7 @@ public class Activity {
 
     public ContentValues toContent() {
         ContentValues values = new ContentValues();
-        values.put(DnemContract.Activity.COLUMN_NAME_LABEL, label);
+        values.put(Dnem.Activity.C_LABEL, label);
         return values;
     }
 
