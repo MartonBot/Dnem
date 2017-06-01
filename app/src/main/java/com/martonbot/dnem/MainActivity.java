@@ -4,12 +4,11 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,48 +21,137 @@ import com.martonbot.dnem.Dnem.Activity;
 import com.martonbot.dnem.Dnem.Schedule;
 import com.martonbot.dnem.Dnem.TrackingLog;
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.Calendar;
+
+public class MainActivity extends android.app.Activity {
 
     private ListView listView;
     private DnemActivityAdapter listAdapter;
 
-    private Cursor cursor;
     private DnemDbHelper dbHelper;
     private SQLiteDatabase db;
-    private Calendar calendar;
+
+    private ImageButton addButton;
+    private TextView dateText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        onFirstRun();
+
         setContentView(R.layout.activity_main);
+        findControls();
 
         // create the database to read and write
         db = new DnemDbHelper(MainActivity.this).getWritableDatabase();
         dbHelper = new DnemDbHelper(MainActivity.this);
-        calendar = Calendar.getInstance();
 
-        listView = (ListView) findViewById(R.id.listView);
-        listAdapter = new DnemActivityAdapter(MainActivity.this, cursor);
+        listAdapter = new DnemActivityAdapter(MainActivity.this, null);
         listView.setAdapter(listAdapter);
+        addButton.setOnClickListener(new OnAddButtonClickListener());
+    }
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent editActivity = new Intent(MainActivity.this, EditActivity.class);
-                startActivity(editActivity);
-            }
-        });
+    private void findControls() {
+        listView = (ListView) findViewById(R.id.listView);
+        addButton = (ImageButton) findViewById(R.id.add_button);
+        dateText = (TextView) findViewById(R.id.date_text);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
+        dateText.setText(Calendar.getInstance().getTime().toString());
         reloadList();
+    }
+
+    private void reloadList() {
+        listAdapter.changeCursor(getActivities());
+    }
+
+    private Cursor getActivities() {
+        String[] activitiesSelectionArgs = new String[] {
+            "" + DateTime.now()
+        };
+        return dbHelper.getWritableDatabase().query(
+                DnemDbHelper.activitiesJoinTable,
+                DnemDbHelper.activitiesProjection,
+                DnemDbHelper.activitiesSelection,
+                activitiesSelectionArgs,
+                DnemDbHelper.activitiesGroupBy,
+                null,
+                DnemDbHelper.activitiesOrderBy
+        );
+    }
+
+    private class ConfirmUndoClickListener implements DialogInterface.OnClickListener {
+
+        private long trackingLogId;
+
+        public ConfirmUndoClickListener(long trackingLogId) {
+            this.trackingLogId = trackingLogId;
+        }
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            switch (which) {
+                case DialogInterface.BUTTON_POSITIVE:
+                    deleteTrackingLog(trackingLogId);
+                    reloadList();
+                    break;
+                case DialogInterface.BUTTON_NEGATIVE:
+                    break;
+            }
+        }
+    }
+
+    private void deleteTrackingLog(long trackingLogId) {
+        String where = TrackingLog._ID + " =? ";
+        String[] whereArgs = new String[]{
+                "" + trackingLogId
+        };
+        db.delete(
+                TrackingLog.T_NAME,
+                where,
+                whereArgs
+        );
+    }
+
+    private void insertTrackingLog(long activityId) {
+        Instant now = new Instant();
+        ContentValues trackingLogValues = new ContentValues();
+        trackingLogValues.put(TrackingLog.C_ACTIVITY_ID, activityId); // we set the foreign key
+        trackingLogValues.put(TrackingLog.C_TIMESTAMP, now.getMillis()); // we set the current instant
+        trackingLogValues.put(TrackingLog.C_UTC_DAY, new LocalDate(now).toString()); // we set the local date
+        trackingLogValues.put(TrackingLog.C_TIMEZONE, DateTimeZone.getDefault().getID()); // we set the local timezone
+        db.insertOrThrow(TrackingLog.T_NAME, null, trackingLogValues);
+        reloadList();
+    }
+
+    private void onFirstRun() {
+        // do stuff for first run here
+        checkTimeZone();
+
+        // flag as run
+        SharedPreferences sp = getSharedPreferences(Constants.APP_NAME, MODE_PRIVATE);
+        boolean firstRun = !sp.getBoolean(Constants.ALREADY_RUN, false);
+        if (firstRun) {
+            SharedPreferences.Editor e = sp.edit();
+            e.putBoolean(Constants.ALREADY_RUN, true);
+            e.apply();
+        }
+    }
+
+    private void checkTimeZone() {
+        SharedPreferences sp = getSharedPreferences(Constants.APP_NAME, MODE_PRIVATE);
+        String timeZoneId = DateTimeZone.getDefault().getID();
+        SharedPreferences.Editor e = sp.edit();
+        e.putString(Constants.DEFAULT_TIMEZONE_ID, timeZoneId);
+        e.apply();
     }
 
     private class DnemActivityAdapter extends CursorAdapter {
@@ -84,7 +172,8 @@ public class MainActivity extends AppCompatActivity {
             int labelIndex = cursor.getColumnIndex(Activity.C_LABEL);
             int detailsIndex = cursor.getColumnIndex(Activity.C_DETAILS);
             int scheduledIndex = cursor.getColumnIndex(Schedule.C_IS_ACTIVE);
-            int dateIndex = cursor.getColumnIndex(TrackingLog.C_DATE);
+            int timestampIndex = cursor.getColumnIndex(TrackingLog.C_TIMESTAMP);
+            int timezoneIndex = cursor.getColumnIndex(TrackingLog.C_TIMEZONE);
 
             long activityId = cursor.getLong(idIndex);
 
@@ -93,21 +182,21 @@ public class MainActivity extends AppCompatActivity {
             TextView detailsText = (TextView) view.findViewById(R.id.details_text);
             ImageButton doneButton = (ImageButton) view.findViewById(R.id.done_button);
 
-            String label = cursor.getString(labelIndex);
-            labelText.setText(label);
+            labelText.setText(cursor.getString(labelIndex));
             detailsText.setText(cursor.getString(detailsIndex));
             int backgroundDrawableId = cursor.getInt(scheduledIndex) > 0 ? R.drawable.background_item_rc_enabled : R.drawable.background_item_rc_disabled;
             view.setBackground(getResources().getDrawable(backgroundDrawableId, null));
 
-            long timestamp = cursor.getLong(dateIndex);
-            boolean isDoneForToday = timestamp >= getMidnight();
+            String timezoneId = cursor.getString(timezoneIndex);
+            DateTimeZone timezone = DateTimeZone.forID(timezoneId);
+            long timestamp = cursor.getLong(timestampIndex);
+            boolean isDoneForToday = new LocalDate(timestamp, timezone).equals(LocalDate.now()); // same day?
             int doneButtonBackgroundId = isDoneForToday ? R.drawable.background_button_done : R.drawable.background_button_not_done;
             doneButton.setBackground(getResources().getDrawable(doneButtonBackgroundId, null));
 
             // set the listeners
             view.setOnClickListener(new OnActivityClickListener(activityId));
             doneButton.setOnClickListener(new OnDoneClickListener(doneButton, activityId));
-            doneButton.setEnabled(true);
         }
     }
 
@@ -121,11 +210,21 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onClick(View v) {
+            Intent viewActivity = new Intent(MainActivity.this, ViewActivity.class);
+            viewActivity.putExtra(Constants.EXTRA_ACTIVITY_ID, activityId);
+            startActivity(viewActivity);
+        }
+    }
+
+    private class OnAddButtonClickListener implements ImageButton.OnClickListener {
+        @Override
+        public void onClick(View view) {
             Intent editActivity = new Intent(MainActivity.this, EditActivity.class);
-            editActivity.putExtra(Constants.EXTRA_ACTIVITY_ID, activityId);
             startActivity(editActivity);
         }
     }
+
+
 
     private class OnDoneClickListener implements ImageButton.OnClickListener {
 
@@ -139,24 +238,26 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onClick(View v) {
-            // first disable the button
-            doneButton.setEnabled(false);
-
             // is there a tracking log for the current day?
             String[] trackingLogProjection = {
                     TrackingLog._ID,
-                    TrackingLog.C_DATE
+                    TrackingLog.C_TIMESTAMP,
+                    TrackingLog.C_UTC_DAY,
+                    TrackingLog.C_TIMEZONE
             };
 
-            String trackingLogSelection = TrackingLog.C_ACTIVITY_ID + " = ? AND " + TrackingLog.C_DATE + " >= ?";
+            String trackingLogSelection = TrackingLog.C_ACTIVITY_ID + " = ?" +
+                    "AND " + TrackingLog.C_UTC_DAY + " = ?" +
+                    "AND " + TrackingLog.C_TIMEZONE + " = ?";
             String[] trackingLogSelectionArgs = {
                     "" + activityId,
-                    "" + getMidnight()
+                    new LocalDate().toString(),
+                    DateTimeZone.getDefault().getID() // we want to find a tracking log for the current timezone
             };
 
             String groupBy = TrackingLog.C_ACTIVITY_ID;
 
-            String orderBy = TrackingLog.C_DATE + " DESC";
+            String orderBy = TrackingLog.C_TIMESTAMP + " DESC";
 
             Cursor tlCursor = db.query(
                     TrackingLog.T_NAME,
@@ -180,97 +281,6 @@ public class MainActivity extends AppCompatActivity {
             }
             tlCursor.close();
         }
-    }
-
-    private long getMidnight() {
-        Calendar midnight = new GregorianCalendar();
-        midnight.set(Calendar.HOUR_OF_DAY, 0);
-        midnight.set(Calendar.MINUTE, 0);
-        midnight.set(Calendar.SECOND, 0);
-        midnight.set(Calendar.MILLISECOND, 0);
-        return midnight.getTimeInMillis();
-    }
-
-    private void reloadList() {
-        String joinTable = Activity.T_NAME
-                + " JOIN "
-                + Schedule.T_NAME
-                + " ON " + Activity.T_NAME + "." + Activity._ID
-                + " = " + Schedule.T_NAME + "." + Schedule.C_ACTIVITY_ID
-                + " LEFT OUTER JOIN "
-                + TrackingLog.T_NAME
-                + " ON " + Activity.T_NAME + "." + Activity._ID
-                + " = " + TrackingLog.T_NAME + "." + TrackingLog.C_ACTIVITY_ID;
-        String[] queryProjection = {
-                Activity.T_NAME + "." + Activity._ID,
-                Activity.C_LABEL,
-                Activity.C_DETAILS,
-                Schedule.C_IS_ACTIVE,
-                "MAX(" + TrackingLog.C_DATE + ") AS " + TrackingLog.C_DATE,
-        };
-
-        String groupBy = Activity.T_NAME + "." + Activity._ID;
-
-        /*
-        String querySelection = TrackingLog.C_DATE + " >= ? OR " + TrackingLog.C_DATE + " IS NULL";
-        String[] querySelectionArgs = {
-                "" + getMidnight()
-        };*/
-
-        String orderBy = TrackingLog.C_DATE + " ASC";
-
-        cursor = dbHelper.getWritableDatabase().query(
-                joinTable,
-                queryProjection,
-                null,
-                null,
-                groupBy,
-                null,
-                orderBy
-        );
-        listAdapter.changeCursor(cursor);
-    }
-
-    private class ConfirmUndoClickListener implements DialogInterface.OnClickListener {
-
-        private long trackingLogId;
-
-        public ConfirmUndoClickListener(long trackingLogId) {
-            this.trackingLogId = trackingLogId;
-        }
-
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            switch (which) {
-                case DialogInterface.BUTTON_POSITIVE:
-                    deleteTrackingLog(trackingLogId);
-                    break;
-                case DialogInterface.BUTTON_NEGATIVE:
-                    break;
-            }
-        }
-    }
-
-    private void deleteTrackingLog(long trackingLogId) {
-        String where = TrackingLog._ID + " =? ";
-        String[] whereArgs = new String[]{
-                "" + trackingLogId
-        };
-        db.delete(
-                TrackingLog.T_NAME,
-                where,
-                whereArgs
-        );
-        reloadList();
-    }
-
-    private void insertTrackingLog(long activityId) {
-        ContentValues trackingLogValues = new ContentValues();
-        trackingLogValues.put(TrackingLog.C_ACTIVITY_ID, activityId); // we set the foreign key
-        trackingLogValues.put(TrackingLog.C_DATE, calendar.getTimeInMillis()); // we set the date
-        trackingLogValues.put(TrackingLog.C_IS_DONE, true);
-        db.insert(TrackingLog.T_NAME, null, trackingLogValues);
-        reloadList();
     }
 
 }

@@ -21,9 +21,13 @@
     </style>
 
     <style name="Button" parent="AppTheme">
-        <item name="android:background">@color/primary_dark</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
         <item name="android:textColor">@color/primary_text</item>
     </style>
 
+    <style name="ImageButton" parent="AppTheme">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:padding">@dimen/button_padding</item>
+    </style>
 
 </resources>

@@ -1,9 +1,10 @@
 package com.martonbot.dnem;
 
-/**
- * Created by mgrihangne on 15/05/2017.
- */
 public class Constants {
 
     public static final String EXTRA_ACTIVITY_ID = "EXTRA_ACTIVITY_ID";
+
+    public static final String ALREADY_RUN = "ALREADY_RUN";
+    public static final String DEFAULT_TIMEZONE_ID = "DEFAULT_TIMEZONE_ID";
+    public static final String APP_NAME = "DNEM";
 }

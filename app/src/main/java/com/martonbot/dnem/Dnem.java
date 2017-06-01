@@ -4,6 +4,8 @@ import android.provider.BaseColumns;
 
 public class Dnem {
 
+    private static long MILLISECONDS_IN_A_DAY = 1000 * 60 * 60 * 24;
+
     private Dnem() {
     }
 
@@ -24,8 +26,9 @@ public class Dnem {
     public static class TrackingLog implements BaseColumns {
         public static final String T_NAME = "tracking_log";
         public static final String C_ACTIVITY_ID = "activity_id";
-        public static final String C_DATE = "date";
-        public static final String C_IS_DONE = "is_done";
+        public static final String C_UTC_DAY = "utc_day";
+        public static final String C_TIMEZONE = "timezone";
+        public static final String C_TIMESTAMP = "timestamp";
     }
 
     static final String SQL_CREATE_ACTIVITY =
@@ -48,10 +51,12 @@ public class Dnem {
             "CREATE TABLE " + TrackingLog.T_NAME + " (" +
                     TrackingLog._ID + " INTEGER PRIMARY KEY," +
                     TrackingLog.C_ACTIVITY_ID + " INTEGER," +
-                    TrackingLog.C_DATE + " INTEGER," +
-                    TrackingLog.C_IS_DONE + " BOOLEAN," +
+                    TrackingLog.C_UTC_DAY + " TEXT," +
+                    TrackingLog.C_TIMEZONE + " TEXT," +
+                    TrackingLog.C_TIMESTAMP + " INTEGER," +
                     " FOREIGN KEY(" + TrackingLog.C_ACTIVITY_ID + ") REFERENCES " + Activity.T_NAME + "(" + Activity._ID + ")" +
-                    " ON DELETE CASCADE)";
+                    " ON DELETE CASCADE" +
+                    " UNIQUE (" + TrackingLog.C_ACTIVITY_ID + ", " + TrackingLog.C_UTC_DAY + ", " + TrackingLog.C_TIMEZONE + "))";
 
     static final String SQL_DELETE_ACTIVITY =
             "DROP TABLE IF EXISTS " + Activity.T_NAME;
