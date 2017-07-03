@@ -42,7 +42,7 @@ public class DnemDbHelper extends SQLiteOpenHelper {
 
     public static final String activitiesGroupBy = Activity.T_NAME + "." + Activity._ID;
 
-    public static final String activitiesOrderBy = TrackingLog.C_TIMESTAMP + " ASC, " + Activity.C_LABEL + " ASC";
+    public static final String activitiesOrderBy = Activity.C_LABEL + " ASC";
 
     public DnemDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

@@ -10,13 +10,23 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-    <style name="SettingsHeader" parent="AppTheme">
-        <item name="android:padding">5dp</item>
+    <style name="SettingsHeader">
         <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/primary_text</item>
     </style>
 
-    <style name="SettingsText" parent="AppTheme">
+    <style name="EditText">
+        <item name="android:textColor">@color/primary_text</item>
+    </style>
+
+    <style name="PaddedSection">
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingRight">8dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+    </style>
+
+    <style name="SettingsText">
         <item name="android:textColor">@color/primary_text</item>
     </style>
 

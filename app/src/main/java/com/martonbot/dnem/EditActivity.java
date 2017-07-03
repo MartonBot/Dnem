@@ -1,6 +1,7 @@
 package com.martonbot.dnem;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -141,6 +142,9 @@ public class EditActivity extends android.app.Activity {
 
             // leave activity
             finish();
+            Intent mainActivity = new Intent(EditActivity.this, MainActivity.class);
+            mainActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Will clear out your activity history stack till now
+            startActivity(mainActivity);
         }
     }
 

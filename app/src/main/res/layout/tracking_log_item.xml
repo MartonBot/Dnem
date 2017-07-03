@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="@dimen/small_padding">
+
+    <TextView
+        android:id="@+id/date_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:padding="5dp"
+        android:text="Day"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@color/text_enabled" />
+
+    <TextView
+        android:id="@+id/timestamp_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:padding="5dp"
+        android:text="Timestamp"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@color/text_enabled" />
+
+    <TextView
+        android:id="@+id/timezone_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:padding="5dp"
+        android:text="Timezone"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@color/text_enabled" />
+
+</LinearLayout>
