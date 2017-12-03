@@ -30,15 +30,8 @@ public class DnemDbHelper extends SQLiteOpenHelper {
             Activity.T_NAME + "." + Activity._ID,
             Activity.C_LABEL,
             Activity.C_DETAILS,
-            Schedule.C_IS_ACTIVE,
-            "MAX(" + TrackingLog.C_TIMESTAMP + ") AS " + TrackingLog.C_TIMESTAMP,
-            TrackingLog.C_TIMEZONE
+            Schedule.C_IS_ACTIVE
     };
-
-    public static final String activitiesSelection = TrackingLog.T_NAME + "." + TrackingLog.C_TIMESTAMP +
-            " <= ?" +
-            " OR " + TrackingLog.T_NAME + "." + TrackingLog.C_TIMESTAMP +
-            " IS NULL";
 
     public static final String activitiesGroupBy = Activity.T_NAME + "." + Activity._ID;
 

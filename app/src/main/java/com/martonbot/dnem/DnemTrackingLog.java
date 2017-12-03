@@ -13,6 +13,18 @@ public class DnemTrackingLog implements Comparable<DnemTrackingLog> {
     private LocalDate day;
     private DateTimeZone timezone;
 
+    private int starCounter;
+
+    private int streakCounter;
+
+    public DnemTrackingLog(long id, long activityId, long timestamp, LocalDate day, DateTimeZone timezone) {
+        this.id = id;
+        this.activityId = activityId;
+        this.timestamp = timestamp;
+        this.day = day;
+        this.timezone = timezone;
+    }
+
     public long getActivityId() {
         return activityId;
     }
@@ -29,14 +41,6 @@ public class DnemTrackingLog implements Comparable<DnemTrackingLog> {
         return timezone;
     }
 
-    public DnemTrackingLog(long id, long activityId, long timestamp, LocalDate day, DateTimeZone timezone) {
-        this.id = id;
-        this.activityId = activityId;
-        this.timestamp = timestamp;
-        this.day = day;
-        this.timezone = timezone;
-    }
-
     public long getId() {
         return id;
     }
@@ -45,4 +49,23 @@ public class DnemTrackingLog implements Comparable<DnemTrackingLog> {
     public int compareTo(@NonNull DnemTrackingLog tl) {
         return Long.signum(this.timestamp - tl.timestamp);
     }
+
+    public int getStarCounter() {
+        return starCounter;
+    }
+
+    public void setStarCounter(int starCounter) {
+        this.starCounter = starCounter;
+    }
+
+
+    public int getStreakCounter() {
+        return streakCounter;
+    }
+
+    public void setStreakCounter(int streakCounter) {
+        this.streakCounter = streakCounter;
+    }
+
+
 }

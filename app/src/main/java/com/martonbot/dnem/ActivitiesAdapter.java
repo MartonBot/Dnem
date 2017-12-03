@@ -17,10 +17,12 @@ public class  ActivitiesAdapter extends BaseAdapter {
 
     private List<DnemActivity> activities;
     private Context context;
+    private UpdatableActivity updatableActivity;
 
-    public ActivitiesAdapter(Context context, List<DnemActivity> activities) {
+    public ActivitiesAdapter(Context context, UpdatableActivity updatableActivity, List<DnemActivity> activities) {
         this.context = context;
         this.activities = activities;
+        this.updatableActivity = updatableActivity;
     }
 
     @Override
@@ -46,29 +48,25 @@ public class  ActivitiesAdapter extends BaseAdapter {
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
         }
-
+        // todo this needs to be refactored
         TextView labelText = (TextView) convertView.findViewById(R.id.label_text);
         TextView detailsText = (TextView) convertView.findViewById(R.id.details_text);
-        ImageButton doneButton = (ImageButton) convertView.findViewById(R.id.done_button);
+        TextView streakText = (TextView) convertView.findViewById(R.id.streak_text);
+        View doneButton = convertView.findViewById(R.id.done_button);
 
         labelText.setText(activity.getLabel());
         detailsText.setText(activity.getDetails());
 
         // done button
-        boolean isDoneForToday = false;
-        if (activity.trackingLogs.size() > 0) {
-            DnemTrackingLog mostRecentTrackingLog = activity.trackingLogs.get(0);
-            DateTimeZone timezone = mostRecentTrackingLog.getTimezone();
-            long timestamp = mostRecentTrackingLog.getTimestamp();
-            isDoneForToday = new LocalDate(timestamp, timezone).equals(LocalDate.now()); // same day?
-        }
+        boolean isDoneForToday = activity.isDoneForToday();
         int doneButtonBackgroundId = isDoneForToday ? R.drawable.background_button_done : R.drawable.background_button_not_done;
         doneButton.setBackground(context.getResources().getDrawable(doneButtonBackgroundId, null));
+        streakText.setText("" + activity.getCurrentStreak());
 
         // click on the view
         convertView.setOnClickListener(new OnActivityClickListener(context, activity));
 
-        doneButton.setOnClickListener(new OnDoneClickListener(context, convertView, activity));
+        doneButton.setOnClickListener(new OnDoneClickListener(context, updatableActivity, activity));
 
         return convertView;
     }

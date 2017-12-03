@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
+import org.joda.time.Instant;
 import org.joda.time.LocalDate;
 
 import java.util.LinkedList;
@@ -27,16 +28,13 @@ public class DnemDataLoader {
     private static List<DnemActivity> loadActivities(Context context) {
         List<DnemActivity> activities;
 
-        String[] activitiesSelectionArgs = new String[]{
-                "" + DateTime.now().getMillis() // todo clean the string
-        };
         // todo put all the arguments back there
         SQLiteDatabase db = new DnemDbHelper(context).getReadableDatabase();
         Cursor cursor = db.query(
                 DnemDbHelper.activitiesJoinTable,
                 DnemDbHelper.activitiesProjection,
-                DnemDbHelper.activitiesSelection,
-                activitiesSelectionArgs,
+                null,
+                null,
                 DnemDbHelper.activitiesGroupBy,
                 null,
                 DnemDbHelper.activitiesOrderBy
@@ -47,12 +45,14 @@ public class DnemDataLoader {
         int idIndex = cursor.getColumnIndex(Dnem.Activity._ID);
         int labelIndex = cursor.getColumnIndex(Dnem.Activity.C_LABEL);
         int detailsIndex = cursor.getColumnIndex(Dnem.Activity.C_DETAILS);
+        int isActiveIndex = cursor.getColumnIndex(Dnem.Schedule.C_IS_ACTIVE);
 
         while (cursor.moveToNext()) {
             long id = cursor.getLong(idIndex);
             String label = cursor.getString(labelIndex);
             String details = cursor.getString(detailsIndex);
-            DnemActivity activity = new DnemActivity(id, label, details);
+            boolean isActive = cursor.getInt(isActiveIndex) > 0;
+            DnemActivity activity = new DnemActivity(id, label, details, isActive);
             activities.add(activity);
         }
         cursor.close();
@@ -70,9 +70,11 @@ public class DnemDataLoader {
                 Dnem.TrackingLog.C_TIMEZONE
         };
 
-        String querySelection = Dnem.TrackingLog.T_NAME + "." + Dnem.TrackingLog.C_ACTIVITY_ID + " = ?";
+        String querySelection = Dnem.TrackingLog.T_NAME + "." + Dnem.TrackingLog.C_ACTIVITY_ID + " = ?"
+                + " AND " + Dnem.TrackingLog.T_NAME + "." + Dnem.TrackingLog.C_TIMESTAMP + " <= ?";
         String[] querySelectionArgs = {
-                "" + activityId
+                "" + activityId,
+                "" + new Instant().getMillis()
         };
 
         String orderBy = Dnem.TrackingLog.C_TIMESTAMP + " DESC";

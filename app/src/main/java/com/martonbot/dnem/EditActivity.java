@@ -2,7 +2,6 @@ package com.martonbot.dnem;
 
 import android.content.ContentValues;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
@@ -25,16 +24,18 @@ public class EditActivity extends android.app.Activity {
     private ImageButton deleteButton;
 
     private SQLiteDatabase db;
-    private long activityId = 0;
+    private DnemActivity activity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // get the activity ID from the intent if it was passed
-        activityId = getIntent().getLongExtra("EXTRA_ACTIVITY_ID", 0);
+        long activityId = getIntent().getLongExtra("EXTRA_ACTIVITY_ID", 0);
 
         setContentView(R.layout.activity_edit);
+
+        activity = activityId != 0 ? ((DnemApplication) getApplicationContext()).getActivity(activityId) : null;
 
         // set the controls
         cancelButton = (Button) findViewById(R.id.cancel_button);
@@ -44,11 +45,12 @@ public class EditActivity extends android.app.Activity {
         scheduleActivitySwitch = (Switch) findViewById(R.id.schedule_activity_switch);
         deleteButton = (ImageButton) findViewById(R.id.delete_button);
 
-        // create the database to read and write
-        db = new DnemDbHelper(EditActivity.this).getWritableDatabase();
-
         // populate the fields from the database if the activity ID was passed
-        populateActivity(activityId);
+        if (activity != null) {
+            labelEdit.setText(activity.getLabel());
+            detailsEdit.setText(activity.getDetails());
+            scheduleActivitySwitch.setChecked(activity.isActive());
+        }
 
         // controls listeners
         cancelButton.setOnClickListener(new CancelButtonOnClickListener());
@@ -57,44 +59,108 @@ public class EditActivity extends android.app.Activity {
 
     }
 
-    private void populateActivity(long activityId) {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // create the database to read and write
+        db = new DnemDbHelper(EditActivity.this).getWritableDatabase();
+    }
 
-        // get data from the join between activity and schedule
-        String[] projection = {
-                Activity.T_NAME + "." + Activity._ID,
-                Activity.C_LABEL,
-                Activity.C_DETAILS,
-                Schedule.C_IS_ACTIVE
-        };
-        String selection = Activity.T_NAME + "." + Activity._ID + " = ?";
-        String[] selectionArgs = {
-                "" + activityId
-        };
-        String joinTable = Activity.T_NAME + " JOIN " + Schedule.T_NAME + " ON " + Activity.T_NAME + "." + Activity._ID + " = " + Schedule.C_ACTIVITY_ID;
-        Cursor cursor = db.query(
-                joinTable,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                null
-        );
+    @Override
+    protected void onPause() {
+        super.onPause();
+        db.close();
+    }
 
-        // if we find a result
-        if (cursor.moveToNext()) {
-            int labelIndex = cursor.getColumnIndex(Activity.C_LABEL);
-            int detailsIndex = cursor.getColumnIndex(Activity.C_DETAILS);
-            int scheduledIndex = cursor.getColumnIndex(Schedule.C_IS_ACTIVE);
-            labelEdit.setText(cursor.getString(labelIndex));
-            detailsEdit.setText(cursor.getString(detailsIndex));
-            scheduleActivitySwitch.setChecked(cursor.getInt(scheduledIndex) > 0);
-        } else {
-            // throw new IllegalStateException("No activity corresponding to this ID");
+    private void saveActivity() {
+
+        // if the activity doesn't exist yet, create it
+        if (activity == null) {
+            activity = new DnemActivity();
         }
 
-        cursor.close();
+        // first edit the DnemActivity
+        activity.setLabel(labelEdit.getText().toString());
+        activity.setDetails(detailsEdit.getText().toString());
+        activity.setActive(scheduleActivitySwitch.isChecked());
 
+        // Activity
+        ContentValues activityValues = new ContentValues();
+        activityValues.put(Activity.C_LABEL, activity.getLabel());
+        activityValues.put(Activity.C_DETAILS, activity.getDetails());
+
+        // Schedule
+        ContentValues scheduleValues = new ContentValues();
+        scheduleValues.put(Schedule.C_IS_ACTIVE, activity.isActive());
+
+        if (activity.getId() == 0) {
+            // insert a new one
+            long newActivityId = db.insert(
+                    Activity.T_NAME,
+                    null,
+                    activityValues);
+
+            scheduleValues.put(Schedule.C_ACTIVITY_ID, newActivityId); // this is where we set the foreign key
+
+            long newScheduleId = db.insert(
+                    Schedule.T_NAME,
+                    null,
+                    scheduleValues);
+
+            activity.setId(newActivityId);
+        }
+        else {
+            // update
+            long activityId = activity.getId();
+
+            String activitySelection = Activity._ID + " = ?";
+            String[] activitySelectionArgs = {
+                    "" + activityId
+            };
+
+            String scheduleSelection = Schedule.C_ACTIVITY_ID + " = ?";
+            String[] scheduleSelectionArgs = {
+                    "" + activityId
+            };
+
+            int activityCount = db.update(
+                    Activity.T_NAME,
+                    activityValues,
+                    activitySelection,
+                    activitySelectionArgs);
+
+            int scheduleCount = db.update(
+                    Schedule.T_NAME,
+                    scheduleValues,
+                    scheduleSelection,
+                    scheduleSelectionArgs);
+
+            if (activityCount != scheduleCount) {
+                throw new IllegalStateException("Illegal database state");
+            }
+        }
+    }
+
+    private void deleteActivity() {
+        long activityId = activity.getId();
+        String activitySelection = Activity._ID + " = ?";
+        String[] activitySelectionArgs = {
+                "" + activityId
+        };
+
+        String scheduleSelection = Schedule.C_ACTIVITY_ID + " = ?";
+        String[] scheduleSelectionArgs = {
+                "" + activityId
+        };
+        db.delete(Schedule.T_NAME,
+                scheduleSelection,
+                scheduleSelectionArgs);
+
+        db.delete(Activity.T_NAME,
+                activitySelection,
+                activitySelectionArgs);
+
+        Toast.makeText(EditActivity.this, "deleted", Toast.LENGTH_SHORT).show();
     }
 
     private class SaveButtonOnClickListener implements View.OnClickListener {
@@ -106,7 +172,9 @@ public class EditActivity extends android.app.Activity {
             try {
                 saveActivity();
                 db.setTransactionSuccessful();
-            } catch (Exception e) {
+                Toast.makeText(EditActivity.this, "Activity saved", Toast.LENGTH_SHORT).show();
+            } catch (IllegalStateException e) {
+                Toast.makeText(EditActivity.this, "Failed to save the activity", Toast.LENGTH_SHORT).show();
             } finally {
                 db.endTransaction();
             }
@@ -129,7 +197,7 @@ public class EditActivity extends android.app.Activity {
         @Override
         public void onClick(View v) {
             // delete the activity if it exists
-            if (activityId != 0) {
+            if (activity != null) {
                 db.beginTransaction();
                 try {
                     deleteActivity();
@@ -146,86 +214,5 @@ public class EditActivity extends android.app.Activity {
             mainActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Will clear out your activity history stack till now
             startActivity(mainActivity);
         }
-    }
-
-    private void saveActivity() throws Exception {
-
-        // Activity
-        ContentValues activityValues = new ContentValues();
-        activityValues.put(Activity.C_LABEL, labelEdit.getText().toString());
-        activityValues.put(Activity.C_DETAILS, detailsEdit.getText().toString());
-
-        // Schedule
-        ContentValues scheduleValues = new ContentValues();
-        scheduleValues.put(Schedule.C_IS_ACTIVE, scheduleActivitySwitch.isChecked());
-
-        String activitySelection = Activity._ID + " = ?";
-        String[] activitySelectionArgs = {
-                "" + activityId
-        };
-
-        String scheduleSelection = Schedule.C_ACTIVITY_ID + " = ?";
-        String[] scheduleSelectionArgs = {
-                "" + activityId
-        };
-
-        if (activityId != 0) {
-            // update
-            int activityCount = db.update(
-                    Activity.T_NAME,
-                    activityValues,
-                    activitySelection,
-                    activitySelectionArgs);
-
-            int scheduleCount = db.update(
-                    Schedule.T_NAME,
-                    scheduleValues,
-                    scheduleSelection,
-                    scheduleSelectionArgs);
-
-            if (activityCount != scheduleCount) {
-                throw new Exception("Illegal database state");
-            }
-
-            //debug
-            Toast.makeText(EditActivity.this, activityCount + " rows updated", Toast.LENGTH_SHORT).show();
-        } else {
-            // insert
-            long newActivityId = db.insert(
-                    Activity.T_NAME,
-                    null,
-                    activityValues);
-
-            scheduleValues.put(Schedule.C_ACTIVITY_ID, newActivityId); // this is where we set the foreign key
-
-            long newScheduleId = db.insert(
-                    Schedule.T_NAME,
-                    null,
-                    scheduleValues);
-
-            // debug
-            Toast.makeText(EditActivity.this, "activity created", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void deleteActivity() throws Exception {
-        String activitySelection = Activity._ID + " = ?";
-        String[] activitySelectionArgs = {
-                "" + activityId
-        };
-
-        String scheduleSelection = Schedule.C_ACTIVITY_ID + " = ?";
-        String[] scheduleSelectionArgs = {
-                "" + activityId
-        };
-        db.delete(Schedule.T_NAME,
-                scheduleSelection,
-                scheduleSelectionArgs);
-
-        db.delete(Activity.T_NAME,
-                activitySelection,
-                activitySelectionArgs);
-
-        Toast.makeText(EditActivity.this, "deleted", Toast.LENGTH_SHORT).show();
     }
 }

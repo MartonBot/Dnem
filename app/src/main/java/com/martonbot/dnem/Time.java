@@ -9,32 +9,35 @@ import org.joda.time.LocalDate;
 
 public class Time {
 
-    private final static long THIRTY_SIX_HOURS_IN_MILLIS = 36 * 60 * 60 * 1000;
-
-    private static boolean thirtySixHoursApart(long todayStamp, long yesterdayStamp) {
-        if (todayStamp <= yesterdayStamp) {
-            throw new IllegalStateException("Today has to be after yesterday!");
+    private static boolean hoursApart(long currentStamp, long previousStamp, int hoursAllowed) {
+        // todo check this as I'm not sure it's doing the right thing?
+        if (currentStamp <= previousStamp) {
+            throw new IllegalStateException("Current timestamp has to be chronologically after previous!");
         }
-        return (todayStamp - yesterdayStamp) <= THIRTY_SIX_HOURS_IN_MILLIS;
+        return (currentStamp - previousStamp) <= hoursAllowed * 60 * 60 * 1000;
     }
 
-    public static boolean keepStreak(long todayStamp, DateTimeZone todayZone, long yesterdayStamp, DateTimeZone yesterdayZone) {
+    public static boolean keepStreak(long currentStamp, DateTimeZone currentZone, long previousStamp, DateTimeZone previousZone, boolean hasStar) {
         boolean keepStreak = false;
-        if (todayZone.equals(yesterdayZone)) {
-            LocalDate today = new LocalDate(todayStamp, todayZone);
-            LocalDate yesterday = new LocalDate(yesterdayStamp, yesterdayZone);
 
-            keepStreak = today.minusDays(1).equals(yesterday) || today.equals(yesterday);
+        int daysAllowed = hasStar ? 2 : 1;
+        int hoursAllowed = hasStar ? 60 : 36;
+
+        if (currentZone.equals(previousZone)) {
+            LocalDate current = new LocalDate(currentStamp, currentZone);
+            LocalDate previous = new LocalDate(previousStamp, previousZone);
+
+            keepStreak = current.minusDays(daysAllowed).equals(previous) || current.equals(previous);
         }
         else {
             // simply compare timestamps
-            keepStreak = thirtySixHoursApart(todayStamp, yesterdayStamp);
+            keepStreak = hoursApart(currentStamp, previousStamp, hoursAllowed);
         }
 
         return keepStreak;
     }
 
     public static LocalDate today() {
-        return new LocalDate();
+        return new LocalDate(DateTimeZone.getDefault());
     }
 }

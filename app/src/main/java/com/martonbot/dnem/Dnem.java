@@ -4,8 +4,6 @@ import android.provider.BaseColumns;
 
 public class Dnem {
 
-    private static long MILLISECONDS_IN_A_DAY = 1000 * 60 * 60 * 24;
-
     private Dnem() {
     }
 
