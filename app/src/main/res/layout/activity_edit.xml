@@ -132,7 +132,7 @@
                 style="@style/SettingsHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="SCHEDULED" />
+                android:text="SCHEDULE" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -146,7 +146,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
                     android:padding="5dp"
-                    android:text="YES" />
+                    android:text="ACTIVE" />
 
                 <Switch
                     android:id="@+id/schedule_activity_switch"
@@ -155,6 +155,33 @@
                     android:layout_alignBottom="@+id/scheduled_text"
                     android:layout_alignTop="@+id/scheduled_text"
                     android:layout_toEndOf="@+id/scheduled_text"
+                    android:checked="true"
+                    android:gravity="center_vertical"
+                    android:padding="5dp" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end">
+
+                <TextView
+                    android:id="@+id/stars_text"
+                    style="@style/SettingsText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:padding="5dp"
+                    android:text="ALLOW STARS" />
+
+                <Switch
+                    android:id="@+id/stars_enable_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignBottom="@+id/stars_text"
+                    android:layout_alignTop="@+id/stars_text"
+                    android:layout_toEndOf="@+id/stars_text"
                     android:checked="true"
                     android:gravity="center_vertical"
                     android:padding="5dp" />

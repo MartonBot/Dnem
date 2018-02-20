@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import org.joda.time.DateTimeZone;
@@ -53,6 +54,7 @@ public class  ActivitiesAdapter extends BaseAdapter {
         TextView detailsText = (TextView) convertView.findViewById(R.id.details_text);
         TextView streakText = (TextView) convertView.findViewById(R.id.streak_text);
         View doneButton = convertView.findViewById(R.id.done_button);
+        ImageView starImage = (ImageView) convertView.findViewById(R.id.star_image);
 
         labelText.setText(activity.getLabel());
         detailsText.setText(activity.getDetails());
@@ -62,6 +64,13 @@ public class  ActivitiesAdapter extends BaseAdapter {
         int doneButtonBackgroundId = isDoneForToday ? R.drawable.background_button_done : R.drawable.background_button_not_done;
         doneButton.setBackground(context.getResources().getDrawable(doneButtonBackgroundId, null));
         streakText.setText("" + activity.getCurrentStreak());
+
+        // Silver or golden star
+        int visibility = activity.getStarCounter() >= 7 ? View.VISIBLE : View.INVISIBLE;
+        starImage.setVisibility(visibility);
+        int starBackground = activity.getStarCounter() >= 28 ? R.drawable.ic_star_gold_24dp : R.drawable.ic_star_silver_24dp;
+        starImage.setBackground(context.getDrawable(starBackground));
+
 
         // click on the view
         convertView.setOnClickListener(new OnActivityClickListener(context, activity));

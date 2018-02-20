@@ -48,7 +48,7 @@ public class TrackingLogsAdapter extends BaseAdapter {
         TextView timezoneText = (TextView) convertView.findViewById(R.id.timezone_text);
         TextView starText = (TextView) convertView.findViewById(R.id.star_counter);
         TextView runningStreakText = (TextView) convertView.findViewById(R.id.streak_counter);
-        ImageView starView = (ImageView) convertView.findViewById(R.id.star_view);
+        ImageView starImage = (ImageView) convertView.findViewById(R.id.star_image);
 
         dayText.setText(trackingLog.getDay().toString());
         timestampText.setText(Long.toString(trackingLog.getTimestamp()));
@@ -56,9 +56,9 @@ public class TrackingLogsAdapter extends BaseAdapter {
         starText.setText("" + trackingLog.getStarCounter());
         runningStreakText.setText("" + trackingLog.getStreakCounter());
         int visibility = trackingLog.getStarCounter() >= 7 ? View.VISIBLE : View.INVISIBLE;
-        starView.setVisibility(visibility);
-        int starBackground = trackingLog.getStarCounter() == 28 ? R.drawable.ic_star_gold_24dp : R.drawable.ic_star_silver_24dp;
-        starView.setBackground(context.getDrawable(starBackground));
+        starImage.setVisibility(visibility);
+        int starBackground = trackingLog.getStarCounter() >= 28 ? R.drawable.ic_star_gold_24dp : R.drawable.ic_star_silver_24dp;
+        starImage.setBackground(context.getDrawable(starBackground));
 
         return convertView;
     }

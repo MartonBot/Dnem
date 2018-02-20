@@ -16,6 +16,7 @@ public class DnemActivity {
     private String details;
     private int currentStreak;
     private int bestStreak;
+    private int starCounter;
     private boolean isActive;
 
     public DnemActivity(long id, String label, String details, boolean isActive) {
@@ -72,59 +73,6 @@ public class DnemActivity {
         Collections.sort(trackingLogs);
         computeStreaks();
         Collections.sort(trackingLogs, Collections.<DnemTrackingLog>reverseOrder());
-    }
-
-    // old implementation, to be removed eventually
-    private void computeStreaksOld() {
-        if (trackingLogs == null) {
-            throw new IllegalStateException("The tracking logs must have been loaded first");
-        }
-        boolean onStreak = true;
-        int runningStreak = 0;
-        int streak = 0; // the streak from today
-        int maxStreak = 0;
-        int starCounter = 0;
-
-        long todayStamp = new Instant().getMillis();
-        DateTimeZone todayZone = DateTimeZone.getDefault();
-        for (DnemTrackingLog tl : trackingLogs) {
-            long previousStamp = tl.getTimestamp();
-            // sanity check
-            if (previousStamp > todayStamp) {
-                throw new IllegalStateException("Previous tracking log is after current");
-            }
-            DateTimeZone previousZone = tl.getTimezone();
-            boolean keepStreak = Time.keepStreak(todayStamp, todayZone, previousStamp, previousZone, false);
-            if (keepStreak) {
-                runningStreak++;
-                if (onStreak) {
-                    streak++;
-                }
-                maxStreak = Math.max(maxStreak, runningStreak);
-
-                // star counter
-                if (starCounter < 28) {
-                    starCounter++;
-                }
-            } else {
-                // counters that will preserve the streak
-                if (starCounter == 28) {
-                    // break gold
-                    starCounter = 7;
-                } else if (starCounter >= 7) {
-                    // break silver
-                    starCounter = 0;
-                } else {
-                    onStreak = false;
-                    runningStreak = 1;
-                }
-            }
-            todayStamp = previousStamp;
-            todayZone = previousZone;
-            tl.setStarCounter(starCounter);
-        }
-        currentStreak = streak;
-        bestStreak = maxStreak;
     }
 
     private void computeStreaks() {
@@ -197,6 +145,7 @@ public class DnemActivity {
             }
             currentStreak = runningStreak;
             bestStreak = maxStreak;
+            this.starCounter = starCounter;
         }
     }
 
@@ -240,12 +189,16 @@ public class DnemActivity {
     public boolean isDoneForToday() {
         boolean isDone = false;
         if (trackingLogs != null && trackingLogs.size() > 0) {
-            DnemTrackingLog mostRecentTrackingLog = trackingLogs.get(0);
+            DnemTrackingLog mostRecentTrackingLog = getMostRecentTrackingLog();
             DateTimeZone timezone = mostRecentTrackingLog.getTimezone();
             long timestamp = mostRecentTrackingLog.getTimestamp();
             isDone = new LocalDate(timestamp, timezone).equals(Time.today());
         }
         return isDone;
+    }
+
+    public int getStarCounter() {
+        return starCounter;
     }
 
     public DnemTrackingLog getMostRecentTrackingLog() {

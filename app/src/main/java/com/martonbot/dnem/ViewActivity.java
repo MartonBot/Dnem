@@ -18,6 +18,7 @@ public class ViewActivity extends UpdatableActivity {
     private TextView bestStreakText;
     private TextView currentStreakText;
     private ListView trackingLogsLists;
+    private ImageView starImage;
 
     private DnemActivity activity;
     private long activityId;
@@ -41,6 +42,7 @@ public class ViewActivity extends UpdatableActivity {
         doneButton = findViewById(R.id.done_button);
         editButton = (ImageButton) findViewById(R.id.edit_button);
         trackingLogsLists = (ListView) findViewById(R.id.tracking_logs_list);
+        starImage = (ImageView) findViewById(R.id.star_image);
     }
 
 
@@ -66,6 +68,12 @@ public class ViewActivity extends UpdatableActivity {
         doneButton.setBackground(getResources().getDrawable(doneButtonBackgroundId, null));
         doneButton.setOnClickListener(new OnDoneClickListener(ViewActivity.this, ViewActivity.this, activity));
         streakText.setText("" + activity.getCurrentStreak());
+
+        // Silver or golden star
+        int visibility = activity.getStarCounter() >= 7 ? View.VISIBLE : View.INVISIBLE;
+        starImage.setVisibility(visibility);
+        int starBackground = activity.getStarCounter() >= 28 ? R.drawable.ic_star_gold_24dp : R.drawable.ic_star_silver_24dp;
+        starImage.setBackground(getDrawable(starBackground));
 
         editButton.setOnClickListener(new ImageButton.OnClickListener() {
 

@@ -13,8 +13,6 @@
     <color name="gold">#FFD700</color>
     <color name="silver">#C0C0C0</color>
 
-    #
-
 
     <color name="item_enabled">@color/primary_dark</color>
     <color name="item_disabled">@color/primary_light</color>
