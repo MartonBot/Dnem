@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/primary"
-    tools:context="com.martonbot.dnem.EditActivity">
+    tools:context="com.martonbot.dnem.activities.EditActivity">
 
     <LinearLayout
         android:id="@+id/main_container"
@@ -30,11 +30,29 @@
                 android:textAppearance="?android:attr/textAppearanceLarge"
                 android:textColor="@color/primary_text" />
 
+            <ImageButton
+                android:id="@+id/edit_button"
+                style="@style/ImageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@id/restore_button"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_edit_black_24dp" />
+
+            <ImageButton
+                android:id="@+id/restore_button"
+                style="@style/ImageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@id/done_button"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_restore_black_24dp" />
+
             <RelativeLayout
                 android:id="@+id/done_button"
                 android:layout_width="72dp"
                 android:layout_height="72dp"
-                android:layout_toStartOf="@+id/edit_button"
+                android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
                 android:background="@drawable/background_button_not_done">
 
@@ -60,15 +78,6 @@
                     android:textAppearance="?android:attr/textAppearanceLarge" />
 
             </RelativeLayout>
-
-            <ImageButton
-                android:id="@+id/edit_button"
-                style="@style/ImageButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_centerVertical="true"
-                android:src="@drawable/ic_edit_black_24dp" />
 
         </RelativeLayout>
 

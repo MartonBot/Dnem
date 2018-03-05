@@ -4,7 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
@@ -46,13 +45,17 @@ public class DnemDataLoader {
         int labelIndex = cursor.getColumnIndex(Dnem.Activity.C_LABEL);
         int detailsIndex = cursor.getColumnIndex(Dnem.Activity.C_DETAILS);
         int isActiveIndex = cursor.getColumnIndex(Dnem.Schedule.C_IS_ACTIVE);
+        int allowStarsIndex = cursor.getColumnIndex(Dnem.Schedule.C_ALLOW_STARS);
+        int weekendsOnIndex = cursor.getColumnIndex(Dnem.Schedule.C_WEEKENDS_ON);
 
         while (cursor.moveToNext()) {
             long id = cursor.getLong(idIndex);
             String label = cursor.getString(labelIndex);
             String details = cursor.getString(detailsIndex);
             boolean isActive = cursor.getInt(isActiveIndex) > 0;
-            DnemActivity activity = new DnemActivity(id, label, details, isActive);
+            boolean allowStars = cursor.getInt(allowStarsIndex) > 0;
+            boolean weekendsOn = cursor.getInt(weekendsOnIndex) > 0;
+            DnemActivity activity = new DnemActivity(id, label, details, isActive, allowStars, weekendsOn);
             activities.add(activity);
         }
         cursor.close();

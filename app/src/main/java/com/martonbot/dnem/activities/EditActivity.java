@@ -1,4 +1,4 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.activities;
 
 import android.content.ContentValues;
 import android.content.Intent;
@@ -13,6 +13,10 @@ import android.widget.Toast;
 
 import com.martonbot.dnem.Dnem.Activity;
 import com.martonbot.dnem.Dnem.Schedule;
+import com.martonbot.dnem.DnemActivity;
+import com.martonbot.dnem.DnemApplication;
+import com.martonbot.dnem.DnemDbHelper;
+import com.martonbot.dnem.R;
 
 public class EditActivity extends android.app.Activity {
 

@@ -19,6 +19,8 @@ public class Dnem {
         public static final String C_ACTIVITY_ID = "activity_id";
         public static final String C_IS_DAILY = "is_daily";
         public static final String C_IS_ACTIVE = "is_active";
+        public static final String C_ALLOW_STARS = "allow_stars";
+        public static final String C_WEEKENDS_ON = "weekends_on";
     }
 
     public static class TrackingLog implements BaseColumns {
@@ -27,6 +29,7 @@ public class Dnem {
         public static final String C_UTC_DAY = "utc_day";
         public static final String C_TIMEZONE = "timezone";
         public static final String C_TIMESTAMP = "timestamp";
+        public static final String I_ACTIVITY_TIMESTAMP = "index_activity_timestamp";
     }
 
     static final String SQL_CREATE_ACTIVITY =
@@ -42,6 +45,8 @@ public class Dnem {
                     Schedule.C_ACTIVITY_ID + " INTEGER," +
                     Schedule.C_IS_DAILY + " BOOLEAN," +
                     Schedule.C_IS_ACTIVE + " BOOLEAN," +
+                    Schedule.C_ALLOW_STARS + " BOOLEAN," +
+                    Schedule.C_WEEKENDS_ON + " BOOLEAN," +
                     " FOREIGN KEY(" + Schedule.C_ACTIVITY_ID + ") REFERENCES " + Activity.T_NAME + "(" + Activity._ID + ")" +
                     " ON DELETE CASCADE)";
 
@@ -55,6 +60,9 @@ public class Dnem {
                     " FOREIGN KEY(" + TrackingLog.C_ACTIVITY_ID + ") REFERENCES " + Activity.T_NAME + "(" + Activity._ID + ")" +
                     " ON DELETE CASCADE" +
                     " UNIQUE (" + TrackingLog.C_ACTIVITY_ID + ", " + TrackingLog.C_UTC_DAY + ", " + TrackingLog.C_TIMEZONE + "))";
+
+    static final String SQL_CREATE_INDEX_TRACKING_LOG =
+            "CREATE UNIQUE INDEX " + TrackingLog.I_ACTIVITY_TIMESTAMP + " ON " + TrackingLog.T_NAME + "(" + TrackingLog.C_ACTIVITY_ID + ", " + TrackingLog.C_TIMESTAMP + ")";
 
     static final String SQL_DELETE_ACTIVITY =
             "DROP TABLE IF EXISTS " + Activity.T_NAME;

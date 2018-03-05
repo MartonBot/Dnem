@@ -8,9 +8,6 @@ import com.martonbot.dnem.Dnem.Activity;
 import com.martonbot.dnem.Dnem.Schedule;
 import com.martonbot.dnem.Dnem.TrackingLog;
 
-/**
- * Created by mgrihangne on 5/05/2017.
- */
 public class DnemDbHelper extends SQLiteOpenHelper {
 
     // If you change the database schema, you must increment the database version.
@@ -30,7 +27,9 @@ public class DnemDbHelper extends SQLiteOpenHelper {
             Activity.T_NAME + "." + Activity._ID,
             Activity.C_LABEL,
             Activity.C_DETAILS,
-            Schedule.C_IS_ACTIVE
+            Schedule.C_IS_ACTIVE,
+            Schedule.C_ALLOW_STARS,
+            Schedule.C_WEEKENDS_ON
     };
 
     public static final String activitiesGroupBy = Activity.T_NAME + "." + Activity._ID;
@@ -46,6 +45,7 @@ public class DnemDbHelper extends SQLiteOpenHelper {
         db.execSQL(Dnem.SQL_CREATE_ACTIVITY);
         db.execSQL(Dnem.SQL_CREATE_SCHEDULE);
         db.execSQL(Dnem.SQL_CREATE_TRACKING_LOG);
+        db.execSQL(Dnem.SQL_CREATE_INDEX_TRACKING_LOG);
     }
 
     @Override

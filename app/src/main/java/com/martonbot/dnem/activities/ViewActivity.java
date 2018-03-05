@@ -1,4 +1,4 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,10 +8,19 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.martonbot.dnem.Constants;
+import com.martonbot.dnem.DnemActivity;
+import com.martonbot.dnem.DnemApplication;
+import com.martonbot.dnem.OnDoneClickListener;
+import com.martonbot.dnem.R;
+import com.martonbot.dnem.TrackingLogsAdapter;
+import com.martonbot.dnem.ViewUpdater;
+
 public class ViewActivity extends UpdatableActivity {
 
     private View doneButton;
     private ImageButton editButton;
+    private ImageButton restoreButton;
     private TextView labelText;
     private TextView streakText;
     private TextView detailsText;
@@ -41,6 +50,7 @@ public class ViewActivity extends UpdatableActivity {
         bestStreakText = (TextView) findViewById(R.id.best_streak_text);
         doneButton = findViewById(R.id.done_button);
         editButton = (ImageButton) findViewById(R.id.edit_button);
+        restoreButton = (ImageButton) findViewById(R.id.restore_button);
         trackingLogsLists = (ListView) findViewById(R.id.tracking_logs_list);
         starImage = (ImageView) findViewById(R.id.star_image);
     }
@@ -58,22 +68,13 @@ public class ViewActivity extends UpdatableActivity {
             trackingLogsLists.setAdapter(getAdapter());
         }
 
-        labelText.setText(activity.getLabel());
-        detailsText.setText(activity.getDetails());
-        currentStreakText.setText("Current: " + activity.getCurrentStreak() + " days"); // todo use resource with placeholders
-        bestStreakText.setText("Best: " + activity.getBestStreak() + " days");
-        // todo refactor the following code with the duplicated one in ActivitiesAdapter
-        boolean isDoneForToday = activity.isDoneForToday();
-        int doneButtonBackgroundId = isDoneForToday ? R.drawable.background_button_done : R.drawable.background_button_not_done;
-        doneButton.setBackground(getResources().getDrawable(doneButtonBackgroundId, null));
-        doneButton.setOnClickListener(new OnDoneClickListener(ViewActivity.this, ViewActivity.this, activity));
-        streakText.setText("" + activity.getCurrentStreak());
 
-        // Silver or golden star
-        int visibility = activity.getStarCounter() >= 7 ? View.VISIBLE : View.INVISIBLE;
-        starImage.setVisibility(visibility);
-        int starBackground = activity.getStarCounter() >= 28 ? R.drawable.ic_star_gold_24dp : R.drawable.ic_star_silver_24dp;
-        starImage.setBackground(getDrawable(starBackground));
+        currentStreakText.setText(String.format(getString(R.string.current_streak), activity.getCurrentStreak())); // todo use resource with placeholders
+        bestStreakText.setText(String.format(getString(R.string.best_streak), activity.getBestStreak()));
+
+        ViewUpdater.updateDoneButton(ViewActivity.this, activity, labelText, detailsText, doneButton, streakText, starImage);
+
+        doneButton.setOnClickListener(new OnDoneClickListener(ViewActivity.this, ViewActivity.this, activity));
 
         editButton.setOnClickListener(new ImageButton.OnClickListener() {
 
@@ -82,6 +83,15 @@ public class ViewActivity extends UpdatableActivity {
                 Intent editActivity = new Intent(ViewActivity.this, EditActivity.class);
                 editActivity.putExtra(Constants.EXTRA_ACTIVITY_ID, activity.getId());
                 startActivity(editActivity);
+            }
+        });
+
+        restoreButton.setOnClickListener(new ImageButton.OnClickListener() {
+
+            @Override
+            public void onClick(View view) {
+                // todo go to the restore activity
+
             }
         });
     }

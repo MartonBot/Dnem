@@ -8,6 +8,8 @@ import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.ImageButton;
 
+import com.martonbot.dnem.activities.UpdatableActivity;
+
 public class OnDoneClickListener implements ImageButton.OnClickListener {
 
     private DnemActivity activity;

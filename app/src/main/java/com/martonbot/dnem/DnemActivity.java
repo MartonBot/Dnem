@@ -1,5 +1,6 @@
 package com.martonbot.dnem;
 
+import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
@@ -18,12 +19,17 @@ public class DnemActivity {
     private int bestStreak;
     private int starCounter;
     private boolean isActive;
+    private boolean allowStars;
+    private boolean weekendsOn;
+    // todo weekends on
 
-    public DnemActivity(long id, String label, String details, boolean isActive) {
+    public DnemActivity(long id, String label, String details, boolean isActive, boolean allowStars, boolean weekendsOn) {
         this.id = id;
         this.label = label;
         this.details = details;
         this.isActive = isActive;
+        this.allowStars = allowStars;
+        this.weekendsOn = weekendsOn;
     }
 
     public DnemActivity() {
@@ -76,6 +82,7 @@ public class DnemActivity {
     }
 
     private void computeStreaks() {
+        // todo take into account the preference for 'allow stars'
         if (trackingLogs == null) {
             throw new IllegalStateException("The tracking logs must have been loaded first");
         }
@@ -88,27 +95,33 @@ public class DnemActivity {
         DnemTrackingLog previousLog = null;
         boolean isFirstTrackingLog = true;
 
+        // iterate through all the tracking logs in ascending order
         for (DnemTrackingLog currentLog : trackingLogs) {
             if (isFirstTrackingLog) {
+                // initialisation
                 runningStreak = 1;
-                starCounter = 1;
+                if (allowStars()) {
+                    starCounter = 1;
+                }
                 isFirstTrackingLog = false;
             } else {
-                // sanity check
-                if (previousLog.getTimestamp() > currentLog.getTimestamp()) {
+                // the previous tracking log exists, we check that it is chronologically before the current one
+                if (previousLog.getTimestamp() >= currentLog.getTimestamp()) {
                     throw new IllegalStateException("Previous tracking log is chronologically after current log.");
                 }
                 // let's compare the current log with the previous log and see whether the streak is conserved
-                if (keepStreak(currentLog, previousLog)) {
+                if (keepStreakDefault(currentLog, previousLog)) {
                     // well done! we increment the streakCount
                     runningStreak++;
                     // and the star count is incremented as well
-                    starCounter++;
+                    if (allowStars()) {
+                        starCounter++;
+                    }
                 } else {
-                    // the streak was broken!
+                    // shit we missed a day apparently
                     // now can we patch it using the star counter, or do we simply lose the streak?
                     // do we have a star to use?
-                    if (starCounter >= 7 && keepStreakWithStar(currentLog, previousLog)) {
+                    if (allowStars() && starCounter >= 7 && keepStreakWithStar(currentLog, previousLog)) {
                         // we can patch our streak
                         runningStreak++;
                     } else {
@@ -116,7 +129,10 @@ public class DnemActivity {
                         runningStreak = 1;
                     }
                     // we lose the star stack anyway because the streak was broken
-                    starCounter = 1;
+                    if (allowStars()) {
+                        starCounter = 1;
+                    }
+
                 }
             }
             currentLog.setStreakCounter(runningStreak);
@@ -135,7 +151,7 @@ public class DnemActivity {
         } else {
             long todayStamp = new Instant().getMillis();
             DateTimeZone todayZone = DateTimeZone.getDefault();
-            if (!keepStreak(todayStamp, todayZone, previousLog)) {
+            if (!keepStreakDefault(todayStamp, todayZone, previousLog.getTimestamp(), previousLog.getTimezone())) {
                 if (starCounter >= 7 && keepStreakWithStar(todayStamp, todayZone, previousLog)) {
                     // we don't lose streak
                 } else {
@@ -149,22 +165,26 @@ public class DnemActivity {
         }
     }
 
-    private boolean keepStreak(DnemTrackingLog current, DnemTrackingLog previous) {
-        return Time.keepStreak(current.getTimestamp(), current.getTimezone(), previous.getTimestamp(), previous.getTimezone(), false);
+    private boolean allowStars() {
+        return allowStars;
     }
 
-    private boolean keepStreak(long currentTimestamp, DateTimeZone currentTimeZone, DnemTrackingLog previous) {
-        return Time.keepStreak(currentTimestamp, currentTimeZone, previous.getTimestamp(), previous.getTimezone(), false);
+    // todo not the most elegant
+    private boolean keepStreakDefault(DnemTrackingLog current, DnemTrackingLog previous) {
+        return Time.isStreakConserved(current.getTimestamp(), current.getTimezone(), previous.getTimestamp(), previous.getTimezone());
+    }
+
+    private boolean keepStreakDefault(long currentTimestamp, DateTimeZone currentTimeZone, long previousTimestamp, DateTimeZone previousTimeZone) {
+        return Time.isStreakConserved(currentTimestamp, currentTimeZone, previousTimestamp, previousTimeZone);
     }
 
     private boolean keepStreakWithStar(DnemTrackingLog current, DnemTrackingLog previous) {
-        return Time.keepStreak(current.getTimestamp(), current.getTimezone(), previous.getTimestamp(), previous.getTimezone(), true);
+        return Time.isStreakConservedUsingStar(current.getTimestamp(), current.getTimezone(), previous.getTimestamp(), previous.getTimezone());
     }
 
     private boolean keepStreakWithStar(long currentTimestamp, DateTimeZone currentTimeZone, DnemTrackingLog previous) {
-        return Time.keepStreak(currentTimestamp, currentTimeZone, previous.getTimestamp(), previous.getTimezone(), true);
+        return Time.isStreakConservedUsingStar(currentTimestamp, currentTimeZone, previous.getTimestamp(), previous.getTimezone());
     }
-
 
     public boolean isActive() {
         return isActive;
@@ -180,6 +200,14 @@ public class DnemActivity {
 
     public void setActive(boolean active) {
         isActive = active;
+    }
+
+    public void setAllowStars(boolean allow) {
+        allowStars = allow;
+    }
+
+    public void setWeekendsOn(boolean on) {
+        weekendsOn = on;
     }
 
     public void setId(long id) {
@@ -203,6 +231,11 @@ public class DnemActivity {
 
     public DnemTrackingLog getMostRecentTrackingLog() {
         return trackingLogs.get(0);
+    }
+
+    public List<LocalDate> getListOfMissedDays() {
+        return null;
+        // todo implement
     }
 
 }

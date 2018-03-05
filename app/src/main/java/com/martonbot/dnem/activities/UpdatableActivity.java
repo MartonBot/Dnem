@@ -1,4 +1,4 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.activities;
 
 import android.app.Activity;
 import android.widget.BaseAdapter;

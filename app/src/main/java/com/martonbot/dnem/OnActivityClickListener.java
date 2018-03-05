@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 
+import com.martonbot.dnem.activities.ViewActivity;
+
 /**
  * Created by mgrihangne on 3/07/2017.
  */

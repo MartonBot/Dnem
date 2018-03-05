@@ -1,4 +1,4 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.activities;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -10,6 +10,12 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.martonbot.dnem.ActivitiesAdapter;
+import com.martonbot.dnem.Constants;
+import com.martonbot.dnem.DnemActivity;
+import com.martonbot.dnem.DnemApplication;
+import com.martonbot.dnem.Preferences;
+import com.martonbot.dnem.R;
 import com.martonbot.dnem.filters.DnemFilter;
 import com.martonbot.dnem.filters.IsActiveFilter;
 
