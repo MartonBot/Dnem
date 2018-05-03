@@ -1,6 +1,9 @@
 package com.martonbot.dnem;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.database.sqlite.SQLiteDatabase;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,16 +11,24 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.martonbot.dnem.activities.UpdatableActivity;
+
 import java.util.List;
 
 public class TrackingLogsAdapter extends BaseAdapter {
 
+    private final SQLiteDatabase db;
     private List<DnemTrackingLog> trackingLogs;
     private Context context;
+    private UpdatableActivity updatableActivity;
+    private DnemActivity activity;
 
-    public TrackingLogsAdapter(Context context, List<DnemTrackingLog> trackingLogs) {
-        this.context = context;
-        this.trackingLogs = trackingLogs;
+    public TrackingLogsAdapter(UpdatableActivity updatableActivity, DnemActivity activity) {
+        this.context = updatableActivity;
+        this.trackingLogs = activity.trackingLogs;
+        this.db = new DnemDbHelper(context).getWritableDatabase();
+        this.activity = activity;
+        this.updatableActivity = updatableActivity;
     }
 
     @Override
@@ -51,15 +62,54 @@ public class TrackingLogsAdapter extends BaseAdapter {
         ImageView starImage = (ImageView) convertView.findViewById(R.id.star_image);
 
         dayText.setText(trackingLog.getDay().toString());
-        timestampText.setText(Long.toString(trackingLog.getTimestamp()));
+        timestampText.setText(String.format("%d", trackingLog.getTimestamp()));
         timezoneText.setText(trackingLog.getTimezone().getID());
-        starText.setText("" + trackingLog.getStarCounter());
-        runningStreakText.setText("" + trackingLog.getStreakCounter());
+        starText.setText(String.format("%d", trackingLog.getStarCounter()));
+        runningStreakText.setText(String.format("%d", trackingLog.getStreakCounter()));
         int visibility = trackingLog.getStarCounter() >= 7 ? View.VISIBLE : View.INVISIBLE;
         starImage.setVisibility(visibility);
         int starBackground = trackingLog.getStarCounter() >= 28 ? R.drawable.ic_star_gold_24dp : R.drawable.ic_star_silver_24dp;
         starImage.setBackground(context.getDrawable(starBackground));
 
+        convertView.setOnLongClickListener(new OnTrackingLogLongClickListener(trackingLog.getId()));
+
         return convertView;
+    }
+
+    private class OnTrackingLogLongClickListener implements View.OnLongClickListener {
+
+        private long trackingLogId;
+
+        public OnTrackingLogLongClickListener(long trackingLogId) {
+            this.trackingLogId = trackingLogId;
+        }
+
+        @Override
+        public boolean onLongClick(View view) {
+            AlertDialog.Builder adBuilder = new AlertDialog.Builder(context);
+            ConfirmDeleteClickListener confirmDeleteClickListener = new ConfirmDeleteClickListener(trackingLogId);
+            adBuilder.setMessage("Do you really want to delete this log? It cannot be undone.").setPositiveButton("Do it!", confirmDeleteClickListener).setNegativeButton("Never mind", confirmDeleteClickListener).show();
+            return false;
+        }
+    }
+
+    private class ConfirmDeleteClickListener implements DialogInterface.OnClickListener {
+
+        private long trackingLogId;
+
+        public ConfirmDeleteClickListener(long trackingLogId) {
+            this.trackingLogId = trackingLogId;
+        }
+
+        @Override
+        public void onClick(DialogInterface dialogInterface, int which) {
+            switch (which) {
+                case DialogInterface.BUTTON_POSITIVE:
+                    TrackingLogs.delete(db, trackingLogId, activity, updatableActivity);
+                    break;
+                case DialogInterface.BUTTON_NEGATIVE:
+                    break;
+            }
+        }
     }
 }

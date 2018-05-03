@@ -96,7 +96,7 @@ public class MainActivity extends UpdatableActivity {
     protected void refreshDataset() {
         globalContext.loadActivities();
         if (activities == null) {
-            activities = new LinkedList<DnemActivity>();
+            activities = new LinkedList<>();
         }
         activities.clear();
         activities.addAll(isActiveFilter.filter(globalContext.getActivities()));
@@ -104,13 +104,20 @@ public class MainActivity extends UpdatableActivity {
 
     @Override
     protected void updateUiElements() {
+        // todo add a fireworks/confetti animation when completing all active activities
+        // todo https://github.com/plattysoft/Leonids
         if (getAdapter() == null) {
             setAdapter(new ActivitiesAdapter(MainActivity.this, MainActivity.this, activities));
             listView.setAdapter(getAdapter());
         }
         LocalDate today = LocalDate.now();
+        LocalDate firstOfApril = new LocalDate(LocalDate.now().getYear(), 4, 1);
+        String niceDate = dateFormat.print(today);
+        if (today.isEqual(firstOfApril)) {
+            niceDate += "\uD83D\uDC09"; // todo add more easter eggs
+        }
         weekdayText.setText(weekdayFormat.print(today));
-        dateText.setText(dateFormat.print(today));
+        dateText.setText(niceDate);
     }
 
     @Override

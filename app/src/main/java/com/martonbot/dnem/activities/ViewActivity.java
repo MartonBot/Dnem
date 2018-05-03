@@ -1,20 +1,31 @@
 package com.martonbot.dnem.activities;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.martonbot.dnem.Constants;
 import com.martonbot.dnem.DnemActivity;
 import com.martonbot.dnem.DnemApplication;
+import com.martonbot.dnem.DnemDbHelper;
 import com.martonbot.dnem.OnDoneClickListener;
 import com.martonbot.dnem.R;
+import com.martonbot.dnem.Time;
+import com.martonbot.dnem.TrackingLogs;
 import com.martonbot.dnem.TrackingLogsAdapter;
 import com.martonbot.dnem.ViewUpdater;
+
+import org.joda.time.Duration;
+import org.joda.time.Instant;
+import org.joda.time.LocalDate;
 
 public class ViewActivity extends UpdatableActivity {
 
@@ -32,6 +43,8 @@ public class ViewActivity extends UpdatableActivity {
     private DnemActivity activity;
     private long activityId;
 
+    private SQLiteDatabase db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +54,8 @@ public class ViewActivity extends UpdatableActivity {
         }
 
         setContentView(R.layout.activity_view);
+
+        this.db = new DnemDbHelper(ViewActivity.this).getWritableDatabase();
 
         // UI elements
         labelText = (TextView) findViewById(R.id.label_text);
@@ -64,7 +79,7 @@ public class ViewActivity extends UpdatableActivity {
     @Override
     protected void updateUiElements() {
         if (getAdapter() == null) {
-            setAdapter(new TrackingLogsAdapter(ViewActivity.this, activity.trackingLogs));
+            setAdapter(new TrackingLogsAdapter(ViewActivity.this, activity));
             trackingLogsLists.setAdapter(getAdapter());
         }
 
@@ -90,10 +105,34 @@ public class ViewActivity extends UpdatableActivity {
 
             @Override
             public void onClick(View view) {
-                // todo go to the restore activity
+                // check whether there is something to fix for the day before
+                LocalDate yesterday  = Time.today().minusDays(1);
+                if (activity.trackingLogFor(yesterday)) {
+                    Toast.makeText(ViewActivity.this, "There is already a log for yesterday.", Toast.LENGTH_SHORT).show(); // todo make it a resource
+                }
+                else {
+                    AlertDialog.Builder adBuilder = new AlertDialog.Builder(ViewActivity.this);
+                    ConfirmRestoreClickListener confirmRestoreClickListener = new ConfirmRestoreClickListener();
+                    adBuilder.setMessage("Restore yesterday?").setPositiveButton("Sure", confirmRestoreClickListener).setNegativeButton("Nah", confirmRestoreClickListener).show();
+                }
 
             }
         });
+    }
+
+    private class ConfirmRestoreClickListener implements DialogInterface.OnClickListener {
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            switch (which) {
+                case DialogInterface.BUTTON_POSITIVE:
+                    long yesterdayTimestamp = new Instant().minus(Duration.standardDays(1)).getMillis();
+                    TrackingLogs.insert(db, activity, ViewActivity.this, yesterdayTimestamp);
+                    break;
+                case DialogInterface.BUTTON_NEGATIVE:
+                    break;
+            }
+        }
     }
 
 }

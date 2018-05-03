@@ -38,11 +38,7 @@ public class OnDoneClickListener implements ImageButton.OnClickListener {
             adBuilder.setMessage("Undo for today?").setPositiveButton("Yup", confirmUndoClickListener).setNegativeButton("Nope", confirmUndoClickListener).show();
         } else {
             // insert the tracking log
-            DnemTrackingLog newTrackingLog = TrackingLogs.insert(db, activity.getId());
-            activity.addNewTrackingLog(newTrackingLog);
-            if (updatableActivity != null) {
-                updatableActivity.updateUI();
-            }
+            TrackingLogs.insert(db, activity, updatableActivity);
             Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
             // Vibrate for 500 milliseconds
             vibrator.vibrate(50);
@@ -62,11 +58,7 @@ public class OnDoneClickListener implements ImageButton.OnClickListener {
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE:
-                    TrackingLogs.delete(db, trackingLogId);
-                    activity.removeLatestTrackinglog();
-                    if (updatableActivity != null) {
-                        updatableActivity.updateUI();
-                    }
+                    TrackingLogs.delete(db, trackingLogId,activity, updatableActivity);
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;

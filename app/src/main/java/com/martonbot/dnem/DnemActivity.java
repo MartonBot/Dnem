@@ -1,5 +1,7 @@
 package com.martonbot.dnem;
 
+import android.view.TextureView;
+
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
@@ -233,9 +235,12 @@ public class DnemActivity {
         return trackingLogs.get(0);
     }
 
-    public List<LocalDate> getListOfMissedDays() {
-        return null;
-        // todo implement
+    public boolean trackingLogFor(LocalDate date) {
+        for (DnemTrackingLog tl : trackingLogs) {
+            if (tl.getDay().equals(date)) {
+                return true;
+            }
+        }
+        return false;
     }
-
 }
