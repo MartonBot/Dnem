@@ -15,13 +15,11 @@ public class OnDoneClickListener implements ImageButton.OnClickListener {
     private DnemActivity activity;
     private UpdatableActivity updatableActivity;
     private Context context;
-    private SQLiteDatabase db;
 
     // todo change parameter, pass adapter instead
     public OnDoneClickListener(Context context, UpdatableActivity updatableActivity, DnemActivity activity) {
         this.activity = activity;
         this.context = context;
-        this.db = new DnemDbHelper(context).getWritableDatabase();
 
         // to update the activity's UI
         this.updatableActivity = updatableActivity;
@@ -38,7 +36,9 @@ public class OnDoneClickListener implements ImageButton.OnClickListener {
             adBuilder.setMessage("Undo for today?").setPositiveButton("Yup", confirmUndoClickListener).setNegativeButton("Nope", confirmUndoClickListener).show();
         } else {
             // insert the tracking log
+            SQLiteDatabase db = new DnemDbHelper(context).getWritableDatabase();
             TrackingLogs.insert(db, activity, updatableActivity);
+            db.close();
             Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
             // Vibrate for 500 milliseconds
             vibrator.vibrate(50);
@@ -58,7 +58,9 @@ public class OnDoneClickListener implements ImageButton.OnClickListener {
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE:
+                    SQLiteDatabase db = new DnemDbHelper(context).getWritableDatabase();
                     TrackingLogs.delete(db, trackingLogId,activity, updatableActivity);
+                    db.close();
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;

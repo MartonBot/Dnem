@@ -70,10 +70,16 @@ public class ViewActivity extends UpdatableActivity {
         starImage = (ImageView) findViewById(R.id.star_image);
     }
 
+    @Override
+    protected void onPause() {
+        db.close();
+        super.onPause();
+    }
 
     @Override
     protected void refreshDataset() {
         activity = ((DnemApplication) getApplicationContext()).getActivity(activityId);
+        activity.processTrackingLogs();
     }
 
     @Override

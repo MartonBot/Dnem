@@ -17,7 +17,6 @@ import java.util.List;
 
 public class TrackingLogsAdapter extends BaseAdapter {
 
-    private final SQLiteDatabase db;
     private List<DnemTrackingLog> trackingLogs;
     private Context context;
     private UpdatableActivity updatableActivity;
@@ -26,7 +25,6 @@ public class TrackingLogsAdapter extends BaseAdapter {
     public TrackingLogsAdapter(UpdatableActivity updatableActivity, DnemActivity activity) {
         this.context = updatableActivity;
         this.trackingLogs = activity.trackingLogs;
-        this.db = new DnemDbHelper(context).getWritableDatabase();
         this.activity = activity;
         this.updatableActivity = updatableActivity;
     }
@@ -105,7 +103,9 @@ public class TrackingLogsAdapter extends BaseAdapter {
         public void onClick(DialogInterface dialogInterface, int which) {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE:
+                    SQLiteDatabase db = new DnemDbHelper(context).getWritableDatabase();
                     TrackingLogs.delete(db, trackingLogId, activity, updatableActivity);
+                    db.close();
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;

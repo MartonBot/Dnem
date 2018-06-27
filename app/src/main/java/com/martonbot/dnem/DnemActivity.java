@@ -64,6 +64,10 @@ public class DnemActivity {
 
     public void setTrackingLogs(List<DnemTrackingLog> trackingLogs) {
         this.trackingLogs = trackingLogs; // at this stage the list is in descending order, most recent first
+        processTrackingLogs();
+    }
+
+    public void processTrackingLogs() {
         Collections.sort(trackingLogs);
         computeStreaks();
         Collections.sort(trackingLogs, Collections.<DnemTrackingLog>reverseOrder());
@@ -167,10 +171,6 @@ public class DnemActivity {
         }
     }
 
-    private boolean allowStars() {
-        return allowStars;
-    }
-
     // todo not the most elegant
     private boolean keepStreakDefault(DnemTrackingLog current, DnemTrackingLog previous) {
         return Time.isStreakConserved(current.getTimestamp(), current.getTimezone(), previous.getTimestamp(), previous.getTimezone());
@@ -190,6 +190,10 @@ public class DnemActivity {
 
     public boolean isActive() {
         return isActive;
+    }
+
+    public boolean allowStars() {
+        return allowStars;
     }
 
     public void setLabel(String label) {

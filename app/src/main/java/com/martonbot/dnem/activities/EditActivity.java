@@ -25,6 +25,7 @@ public class EditActivity extends android.app.Activity {
     private EditText labelEdit;
     private EditText detailsEdit;
     private Switch scheduleActivitySwitch;
+    private Switch allowStarsSwitch;
     private ImageButton deleteButton;
 
     private SQLiteDatabase db;
@@ -47,6 +48,7 @@ public class EditActivity extends android.app.Activity {
         labelEdit = (EditText) findViewById(R.id.label_edit);
         detailsEdit = (EditText) findViewById(R.id.details_edit);
         scheduleActivitySwitch = (Switch) findViewById(R.id.schedule_activity_switch);
+        allowStarsSwitch = (Switch) findViewById(R.id.stars_enable_switch);
         deleteButton = (ImageButton) findViewById(R.id.delete_button);
 
         // populate the fields from the database if the activity ID was passed
@@ -54,6 +56,7 @@ public class EditActivity extends android.app.Activity {
             labelEdit.setText(activity.getLabel());
             detailsEdit.setText(activity.getDetails());
             scheduleActivitySwitch.setChecked(activity.isActive());
+            allowStarsSwitch.setChecked(activity.allowStars());
         }
 
         // controls listeners
@@ -87,6 +90,7 @@ public class EditActivity extends android.app.Activity {
         activity.setLabel(labelEdit.getText().toString());
         activity.setDetails(detailsEdit.getText().toString());
         activity.setActive(scheduleActivitySwitch.isChecked());
+        activity.setAllowStars(allowStarsSwitch.isChecked());
 
         // Activity
         ContentValues activityValues = new ContentValues();
@@ -96,6 +100,7 @@ public class EditActivity extends android.app.Activity {
         // Schedule
         ContentValues scheduleValues = new ContentValues();
         scheduleValues.put(Schedule.C_IS_ACTIVE, activity.isActive());
+        scheduleValues.put(Schedule.C_ALLOW_STARS, activity.allowStars());
 
         if (activity.getId() == 0) {
             // insert a new one

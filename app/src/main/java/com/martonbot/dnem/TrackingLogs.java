@@ -2,7 +2,6 @@ package com.martonbot.dnem;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
-import android.support.annotation.Nullable;
 
 import com.martonbot.dnem.activities.UpdatableActivity;
 
