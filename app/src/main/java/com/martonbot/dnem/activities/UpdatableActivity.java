@@ -9,19 +9,12 @@ import android.widget.BaseAdapter;
  */
 public abstract class UpdatableActivity extends Activity {
 
-    private BaseAdapter adapter;
-
-    public void updateUI() {
+    /**
+     * This method can ba called from outside to notify the updatable activity to update itself. For example, when a new tracking log has been inserted in the database for a given Dnem activity, it should be reflected by changes in the activity UI.
+     */
+    public void update() {
+        refreshData();
         updateUi();
-        adapter.notifyDataSetChanged();
-    }
-
-    public BaseAdapter getAdapter() {
-        return adapter;
-    }
-
-    public void setAdapter(BaseAdapter adapter) {
-        this.adapter = adapter;
     }
 
     /**
@@ -37,9 +30,7 @@ public abstract class UpdatableActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        // when an UpdatableActivity resumes, we refresh the data, then update the UI
-        refreshData();
-        updateUI();
+        update();
     }
 
 }

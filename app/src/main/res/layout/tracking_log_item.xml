@@ -8,51 +8,43 @@
 
     <TextView
         android:id="@+id/date_text"
+        style="@style/TrackingLogEntry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/TrackingLogEntry"
         android:text="Day" />
 
     <TextView
         android:id="@+id/timestamp_text"
+        style="@style/TrackingLogEntry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/TrackingLogEntry"
         android:text="Timestamp" />
 
     <TextView
         android:id="@+id/timezone_text"
+        style="@style/TrackingLogEntry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/TrackingLogEntry"
         android:text="Timezone" />
 
     <TextView
         android:id="@+id/star_counter"
+        style="@style/TrackingLogEntry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/TrackingLogEntry"
         android:text="0" />
 
     <TextView
         android:id="@+id/streak_counter"
+        style="@style/TrackingLogEntry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        style="@style/TrackingLogEntry"
         android:text="0" />
 
-    <FrameLayout
-        android:layout_width="0dp"
+    <ImageView
+        android:id="@+id/star_image"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1">
-
-        <ImageView
-            android:id="@+id/star_image"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:srcCompat="@drawable/ic_star_gold_24dp" />
-
-    </FrameLayout>
-
+        app:srcCompat="@drawable/ic_star_gold_24dp" />
 
 </LinearLayout>

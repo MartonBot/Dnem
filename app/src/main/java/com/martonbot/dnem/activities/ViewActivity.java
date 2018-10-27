@@ -21,7 +21,7 @@ import com.martonbot.dnem.R;
 import com.martonbot.dnem.Time;
 import com.martonbot.dnem.TrackingLogs;
 import com.martonbot.dnem.TrackingLogsAdapter;
-import com.martonbot.dnem.ViewUpdater;
+import com.martonbot.dnem.UiUpdater;
 
 import org.joda.time.Duration;
 import org.joda.time.Instant;
@@ -37,35 +37,38 @@ public class ViewActivity extends UpdatableActivity {
     private TextView detailsText;
     private TextView bestStreakText;
     private TextView currentStreakText;
-    private ListView trackingLogsLists;
+    private ListView trackingLogsListView;
     private ImageView starImage;
+    private TrackingLogsAdapter trackingLogsAdapter;
 
-    private DnemActivity activity;
+    // the Dnem activity viewed here
     private long activityId;
+    private DnemActivity activity;
 
     private SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        activityId = getIntent().getLongExtra("EXTRA_ACTIVITY_ID", 0);
-        if (activityId == 0) {
-            throw new IllegalStateException("A valid activity ID must be passed");
-        }
-
         setContentView(R.layout.activity_view);
 
+        // get Dnem activity from the intent
+        activityId = getIntent().getLongExtra("EXTRA_ACTIVITY_ID", 0);
+        if (activityId == 0) {
+            throw new IllegalStateException("A valid Dnem activity ID must be passed");
+        }
+
         // UI elements
-        labelText = (TextView) findViewById(R.id.label_text);
-        streakText = (TextView) findViewById(R.id.streak_text);
-        detailsText = (TextView) findViewById(R.id.details_text);
-        currentStreakText = (TextView) findViewById(R.id.current_streak_text);
-        bestStreakText = (TextView) findViewById(R.id.best_streak_text);
+        labelText = findViewById(R.id.label_text);
+        streakText = findViewById(R.id.streak_text);
+        detailsText = findViewById(R.id.details_text);
+        currentStreakText = findViewById(R.id.current_streak_text);
+        bestStreakText = findViewById(R.id.best_streak_text);
         doneButton = findViewById(R.id.done_button);
-        editButton = (ImageButton) findViewById(R.id.edit_button);
-        restoreButton = (ImageButton) findViewById(R.id.restore_button);
-        trackingLogsLists = (ListView) findViewById(R.id.tracking_logs_list);
-        starImage = (ImageView) findViewById(R.id.star_image);
+        editButton = findViewById(R.id.edit_button);
+        restoreButton = findViewById(R.id.restore_button);
+        trackingLogsListView = findViewById(R.id.tracking_logs_list);
+        starImage = findViewById(R.id.star_image);
     }
 
     @Override
@@ -83,22 +86,23 @@ public class ViewActivity extends UpdatableActivity {
 
     @Override
     protected void refreshData() {
+        // here we only want to process the tracking logs for this specific Dnem activity
         activity = ((DnemApplication) getApplicationContext()).getActivity(activityId);
         activity.processTrackingLogs();
     }
 
     @Override
     protected void updateUi() {
-        if (getAdapter() == null) {
-            setAdapter(new TrackingLogsAdapter(ViewActivity.this, activity));
-            trackingLogsLists.setAdapter(getAdapter());
+        if (trackingLogsAdapter == null) {
+            trackingLogsAdapter = new TrackingLogsAdapter(ViewActivity.this, activity);
+            trackingLogsListView.setAdapter(trackingLogsAdapter);
         }
+        trackingLogsAdapter.notifyDataSetChanged();
 
-
-        currentStreakText.setText(String.format(getString(R.string.current_streak), activity.getCurrentStreak())); // todo use resource with placeholders
+        currentStreakText.setText(String.format(getString(R.string.current_streak), activity.getCurrentStreak()));
         bestStreakText.setText(String.format(getString(R.string.best_streak), activity.getBestStreak()));
 
-        ViewUpdater.updateDoneButton(ViewActivity.this, activity, labelText, detailsText, doneButton, streakText, starImage);
+        UiUpdater.updateDoneButton(ViewActivity.this, activity, labelText, detailsText, doneButton, streakText, starImage);
 
         doneButton.setOnClickListener(new OnDoneClickListener(ViewActivity.this, ViewActivity.this, activity));
 
@@ -117,11 +121,10 @@ public class ViewActivity extends UpdatableActivity {
             @Override
             public void onClick(View view) {
                 // check whether there is something to fix for the day before
-                LocalDate yesterday  = Time.today().minusDays(1);
+                LocalDate yesterday = Time.today().minusDays(1);
                 if (activity.trackingLogFor(yesterday)) {
                     Toast.makeText(ViewActivity.this, "There is already a log for yesterday.", Toast.LENGTH_SHORT).show(); // todo make it a resource
-                }
-                else {
+                } else {
                     AlertDialog.Builder adBuilder = new AlertDialog.Builder(ViewActivity.this);
                     ConfirmRestoreClickListener confirmRestoreClickListener = new ConfirmRestoreClickListener();
                     adBuilder.setMessage("Restore yesterday?").setPositiveButton("Sure", confirmRestoreClickListener).setNegativeButton("Nah", confirmRestoreClickListener).show();
@@ -131,6 +134,9 @@ public class ViewActivity extends UpdatableActivity {
         });
     }
 
+    /**
+     * When pressing the "Restore tracking log for yesterday" button
+     */
     private class ConfirmRestoreClickListener implements DialogInterface.OnClickListener {
 
         @Override

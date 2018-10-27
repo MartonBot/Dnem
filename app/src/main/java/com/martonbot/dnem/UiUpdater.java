@@ -4,7 +4,10 @@ import android.content.Context;
 import android.view.View;
 import android.widget.TextView;
 
-public class ViewUpdater {
+/**
+ * This class is meant to provide methods to update the UI in multiple places across the app in a consistent way. For example, the "Done" button appears in both the Main activity (in the Dnem activities list) and in the View activity.
+ */
+public class UiUpdater {
 
     public static void updateDoneButton(Context context, DnemActivity activity, TextView labelText, TextView detailsText, View doneButton, TextView streakText, View starImage) {
         labelText.setText(activity.getLabel());

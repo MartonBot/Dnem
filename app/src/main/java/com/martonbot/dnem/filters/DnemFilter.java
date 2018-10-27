@@ -13,7 +13,7 @@ public abstract class DnemFilter {
 
     private boolean isOn;
 
-    public void switchFilter(boolean on) {
+    public void switchOn(boolean on) {
         isOn = on;
     }
 

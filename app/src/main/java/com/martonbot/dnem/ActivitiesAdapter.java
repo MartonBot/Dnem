@@ -57,7 +57,7 @@ public class ActivitiesAdapter extends BaseAdapter {
         View doneButton = convertView.findViewById(R.id.done_button);
         ImageView starImage = convertView.findViewById(R.id.star_image);
 
-        ViewUpdater.updateDoneButton(context, activity, labelText, detailsText, doneButton, streakText, starImage);
+        UiUpdater.updateDoneButton(context, activity, labelText, detailsText, doneButton, streakText, starImage);
 
         // click on the view
         convertView.setOnClickListener(new OnActivityClickListener(context, activity));
