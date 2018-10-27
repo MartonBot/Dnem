@@ -1,6 +1,10 @@
 package com.martonbot.dnem.activities;
 
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,11 +13,13 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.martonbot.dnem.ActivitiesAdapter;
 import com.martonbot.dnem.Constants;
 import com.martonbot.dnem.DnemActivity;
 import com.martonbot.dnem.DnemApplication;
+import com.martonbot.dnem.DnemChannels;
 import com.martonbot.dnem.Preferences;
 import com.martonbot.dnem.R;
 import com.martonbot.dnem.filters.DnemFilter;
@@ -27,12 +33,16 @@ import org.joda.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * The main activity that displays the date and a list of Dnem activities to do, in order of priority
+ */
 public class MainActivity extends UpdatableActivity {
 
     private ListView listView;
     private SharedPreferences sharedPreferences;
 
     private ImageButton addButton;
+    private ImageButton notifButton;
     private TextView weekdayText;
     private TextView dateText;
     private ImageButton filtersButton;
@@ -60,14 +70,16 @@ public class MainActivity extends UpdatableActivity {
 
         addButton.setOnClickListener(new OnAddButtonClickListener());
         filtersButton.setOnClickListener(new OnFiltersButtonClickListener());
+        notifButton.setOnClickListener(new OnNotifButtonClickListener());
     }
 
     private void findControls() {
-        listView = (ListView) findViewById(R.id.listView);
-        addButton = (ImageButton) findViewById(R.id.add_button);
-        filtersButton = (ImageButton) findViewById(R.id.filters_button);
-        weekdayText = (TextView) findViewById(R.id.weekday_text);
-        dateText = (TextView) findViewById(R.id.date_text);
+        listView = findViewById(R.id.listView);
+        addButton = findViewById(R.id.add_button);
+        notifButton = findViewById(R.id.notif_button);
+        filtersButton = findViewById(R.id.filters_button);
+        weekdayText =  findViewById(R.id.weekday_text);
+        dateText = findViewById(R.id.date_text);
     }
 
     private void onFirstRun() {
@@ -93,8 +105,8 @@ public class MainActivity extends UpdatableActivity {
     }
 
     @Override
-    protected void refreshDataset() {
-        globalContext.loadActivities();
+    protected void refreshData() {
+        globalContext.loadActivitiesFromDb();
         if (activities == null) {
             activities = new LinkedList<>();
         }
@@ -103,7 +115,7 @@ public class MainActivity extends UpdatableActivity {
     }
 
     @Override
-    protected void updateUiElements() {
+    protected void updateUi() {
         // todo add a fireworks/confetti animation when completing all active activities
         // todo https://github.com/plattysoft/Leonids
         if (getAdapter() == null) {
@@ -134,6 +146,50 @@ public class MainActivity extends UpdatableActivity {
         }
     }
 
+    private class OnNotifButtonClickListener implements ImageButton.OnClickListener {
+        @Override
+        public void onClick(View view) {
+            globalContext.loadActivitiesFromDb();
+            List<DnemActivity> nextBestActivities = globalContext.getActivities();
+            List<DnemActivity> nextBestActiveActivities = isActiveFilter.filter(nextBestActivities);
+            DnemActivity nextBestActivity = nextBestActiveActivities.get(0);
+
+            Notification.Builder builder = new Notification.Builder(MainActivity.this, DnemChannels.REMINDERS);
+            builder.setSmallIcon(R.drawable.ic_star_black_24dp)
+                    .setContentText(nextBestActivity.getDetails());
+
+            // Registering channel
+            NotificationChannel remindersChannel = new NotificationChannel(DnemChannels.REMINDERS, DnemChannels.REMINDERS_NAME, NotificationManager.IMPORTANCE_DEFAULT);
+            remindersChannel.setDescription(DnemChannels.REMINDERS_DESC);
+            NotificationManager notifManager = getSystemService(NotificationManager.class);
+            notifManager.createNotificationChannel(remindersChannel);
+
+
+            // Create intent
+            Intent intent  = new Intent(MainActivity.this, ViewActivity.class);
+            long myActivityId = nextBestActivity.getId();
+            intent.putExtra(Constants.EXTRA_ACTIVITY_ID, myActivityId);
+            // todo review that code, especially around the activity backstack
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent pendingIntent = PendingIntent.getActivity(MainActivity.this, 0, intent, 0);
+
+            builder.setContentIntent(pendingIntent)
+                    .setAutoCancel(true);
+
+            // Pop it
+            int myNotifid = (int) (nextBestActivity.getId() % 1000); // todo generate an ID for the notif (PK of the activity to do?)
+
+            builder.setContentTitle(nextBestActivity.getLabel() + " - " + myActivityId + " - " + myNotifid);
+
+            notifManager.notify(myNotifid, builder.build());
+
+
+        }
+    }
+
+    /**
+     * When clickin on the filters button
+     */
     private class OnFiltersButtonClickListener implements ImageButton.OnClickListener {
         @Override
         public void onClick(View view) {

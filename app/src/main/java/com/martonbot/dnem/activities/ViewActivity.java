@@ -55,8 +55,6 @@ public class ViewActivity extends UpdatableActivity {
 
         setContentView(R.layout.activity_view);
 
-        this.db = new DnemDbHelper(ViewActivity.this).getWritableDatabase();
-
         // UI elements
         labelText = (TextView) findViewById(R.id.label_text);
         streakText = (TextView) findViewById(R.id.streak_text);
@@ -71,19 +69,26 @@ public class ViewActivity extends UpdatableActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // create the database to read and write
+        db = new DnemDbHelper(ViewActivity.this).getWritableDatabase();
+    }
+
+    @Override
     protected void onPause() {
         db.close();
         super.onPause();
     }
 
     @Override
-    protected void refreshDataset() {
+    protected void refreshData() {
         activity = ((DnemApplication) getApplicationContext()).getActivity(activityId);
         activity.processTrackingLogs();
     }
 
     @Override
-    protected void updateUiElements() {
+    protected void updateUi() {
         if (getAdapter() == null) {
             setAdapter(new TrackingLogsAdapter(ViewActivity.this, activity));
             trackingLogsLists.setAdapter(getAdapter());

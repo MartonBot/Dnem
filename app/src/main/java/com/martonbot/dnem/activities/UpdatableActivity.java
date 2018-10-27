@@ -3,12 +3,16 @@ package com.martonbot.dnem.activities;
 import android.app.Activity;
 import android.widget.BaseAdapter;
 
+/**
+ * An instance of this activity displays some information that may be updated over time. For example, the ViewActivity should update when a new tracking log is added for the day, since it changes the streak, the color of the button and other interface elements.
+ * The activity defines how to refresh its UI based on underlying data in the updateUi() method
+ */
 public abstract class UpdatableActivity extends Activity {
 
     private BaseAdapter adapter;
 
     public void updateUI() {
-        updateUiElements();
+        updateUi();
         adapter.notifyDataSetChanged();
     }
 
@@ -20,18 +24,22 @@ public abstract class UpdatableActivity extends Activity {
         this.adapter = adapter;
     }
 
-    protected abstract void refreshDataset();
+    /**
+     * This method is overriden by subclasses to define how to load and prepare the data necessary for the activity to display it.
+     */
+    protected abstract void refreshData();
 
-    protected abstract void updateUiElements();
+    /**
+     * This method needs to be overriden by subclasses to define how UI elements need to be updated based on changes in the underlying data.
+     */
+    protected abstract void updateUi();
 
     @Override
     protected void onResume() {
         super.onResume();
-        reloadData();
-    }
-
-    public void reloadData() {
-        refreshDataset();
+        // when an UpdatableActivity resumes, we refresh the data, then update the UI
+        refreshData();
         updateUI();
     }
+
 }

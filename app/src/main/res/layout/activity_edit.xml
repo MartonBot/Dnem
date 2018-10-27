@@ -137,6 +137,7 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:padding="8dp"
                 android:gravity="end">
 
                 <TextView
@@ -144,7 +145,7 @@
                     style="@style/SettingsText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
+                    android:gravity="center"
                     android:padding="5dp"
                     android:text="ACTIVE" />
 
@@ -164,6 +165,7 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:padding="8dp"
                 android:gravity="end">
 
                 <TextView
@@ -171,7 +173,7 @@
                     style="@style/SettingsText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
+                    android:gravity="center"
                     android:padding="5dp"
                     android:text="ALLOW STARS" />
 

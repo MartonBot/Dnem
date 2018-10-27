@@ -17,7 +17,7 @@ public class DnemApplication extends Application {
         return activities;
     }
 
-    public void loadActivities() {
+    public void loadActivitiesFromDb() {
         activities = DnemDataLoader.loadAll(this);
         // sort here?
         Collections.sort(activities, new Comparator<DnemActivity>() {
@@ -39,6 +39,9 @@ public class DnemApplication extends Application {
     }
 
     public DnemActivity getActivity(long activityId) {
+        if (activities == null) {
+            throw new IllegalStateException("The activities must be loaded before using them");
+        }
         DnemActivity activity = null;
         for (DnemActivity a : activities) {
             if (a.getId() == activityId) {

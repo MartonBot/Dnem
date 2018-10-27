@@ -47,8 +47,16 @@
             style="@style/ImageButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toStartOf="@+id/filters_button"
+            android:layout_toStartOf="@+id/notif_button"
             android:src="@drawable/ic_add_black_24dp" />
+
+        <ImageButton
+            android:id="@+id/notif_button"
+            style="@style/ImageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@+id/filters_button"
+            android:src="@drawable/ic_info_black_24dp" />
 
         <ImageButton
             android:id="@+id/filters_button"

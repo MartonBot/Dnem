@@ -23,8 +23,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activities.EditActivity" />
-        <activity android:name=".activities.ViewActivity"></activity>
+        <activity
+            android:name=".activities.EditActivity"
+            android:parentActivityName=".activities.ViewActivity"/>
+        <activity
+            android:name=".activities.ViewActivity"
+            android:parentActivityName=".activities.MainActivity" ></activity>
     </application>
 
 </manifest>

@@ -12,7 +12,10 @@ import com.martonbot.dnem.activities.UpdatableActivity;
 
 import java.util.List;
 
-public class  ActivitiesAdapter extends BaseAdapter {
+/**
+ * An adapter for the list of Dnem activities to be displayed in the main activity
+ */
+public class ActivitiesAdapter extends BaseAdapter {
 
     private List<DnemActivity> activities;
     private Context context;
@@ -48,11 +51,11 @@ public class  ActivitiesAdapter extends BaseAdapter {
             convertView = LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
         }
         // todo this needs to be refactored
-        TextView labelText = (TextView) convertView.findViewById(R.id.label_text);
-        TextView detailsText = (TextView) convertView.findViewById(R.id.details_text);
-        TextView streakText = (TextView) convertView.findViewById(R.id.streak_text);
+        TextView labelText = convertView.findViewById(R.id.label_text);
+        TextView detailsText = convertView.findViewById(R.id.details_text);
+        TextView streakText = convertView.findViewById(R.id.streak_text);
         View doneButton = convertView.findViewById(R.id.done_button);
-        ImageView starImage = (ImageView) convertView.findViewById(R.id.star_image);
+        ImageView starImage = convertView.findViewById(R.id.star_image);
 
         ViewUpdater.updateDoneButton(context, activity, labelText, detailsText, doneButton, streakText, starImage);
 
