@@ -31,7 +31,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="SAVE" />
+                    android:text="@string/save" />
 
                 <Button
                     android:id="@+id/cancel_button"
@@ -39,7 +39,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="CANCEL" />
+                    android:text="@string/cancel" />
             </LinearLayout>
 
             <ImageButton
@@ -99,7 +99,7 @@
                 style="@style/SettingsHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="DETAILS" />
+                android:text="@string/details" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -132,7 +132,7 @@
                 style="@style/SettingsHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="SCHEDULE" />
+                android:text="@string/schedule" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -147,7 +147,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:padding="5dp"
-                    android:text="ACTIVE" />
+                    android:text="@string/active" />
 
                 <Switch
                     android:id="@+id/schedule_activity_switch"
@@ -175,10 +175,10 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:padding="5dp"
-                    android:text="ALLOW STARS" />
+                    android:text="@string/allow_cheat_days" />
 
                 <Switch
-                    android:id="@+id/stars_enable_switch"
+                    android:id="@+id/cheat_days_enable_switch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignBottom="@+id/stars_text"

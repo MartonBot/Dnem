@@ -48,7 +48,7 @@ public class EditActivity extends android.app.Activity {
         labelEdit = (EditText) findViewById(R.id.label_edit);
         detailsEdit = (EditText) findViewById(R.id.details_edit);
         scheduleActivitySwitch = (Switch) findViewById(R.id.schedule_activity_switch);
-        allowStarsSwitch = (Switch) findViewById(R.id.stars_enable_switch);
+        allowStarsSwitch = (Switch) findViewById(R.id.cheat_days_enable_switch);
         deleteButton = (ImageButton) findViewById(R.id.delete_button);
 
         // populate the fields from the database if the activity ID was passed

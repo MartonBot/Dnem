@@ -85,6 +85,11 @@ public class ViewActivity extends UpdatableActivity {
     }
 
     @Override
+    protected void refreshActivityData(DnemActivity dnemActivity) {
+        refreshData();
+    }
+
+    @Override
     protected void refreshData() {
         // here we only want to process the tracking logs for this specific Dnem activity
         activity = ((DnemApplication) getApplicationContext()).getActivity(activityId);

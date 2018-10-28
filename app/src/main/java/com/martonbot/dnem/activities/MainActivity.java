@@ -43,7 +43,7 @@ public class MainActivity extends UpdatableActivity {
     private SharedPreferences sharedPreferences;
 
     private ImageButton addButton;
-    private ImageButton notifButton;
+    private ImageButton notifButton; // todo only temporary
     private ImageButton filtersButton;
     private TextView weekdayText;
     private TextView dateText;
@@ -53,6 +53,7 @@ public class MainActivity extends UpdatableActivity {
     private ActivitiesAdapter dnemActivitiesAdapter;
 
     // filters
+    // todo rethink the way filters are implemented, because it's not satisfying
     private DnemFilter isActiveFilter = new IsActiveFilter();
     private DnemFilter isUndoneFilter = new IsUndoneFilter();
     private DnemFilter threeDaysStreakFilter = new ThreeDaysStreakFilter();
@@ -94,6 +95,9 @@ public class MainActivity extends UpdatableActivity {
         isActiveFilter.switchOn(sharedPreferences.getBoolean(Preferences.PREF_IS_ACTIVE_FILTER_ON, true));
     }
 
+    /**
+     * This method should be run only once, at the very first run of this activity
+     */
     private void onFirstRun() {
         // is it the first time the app is run?
         boolean firstRun = !sharedPreferences.getBoolean(Constants.ALREADY_RUN, false);
@@ -106,6 +110,11 @@ public class MainActivity extends UpdatableActivity {
             e.putBoolean(Constants.ALREADY_RUN, true);
             e.apply();
         }
+    }
+
+    @Override
+    protected void refreshActivityData(DnemActivity dnemActivity) {
+        dnemActivity.processTrackingLogs();
     }
 
     @Override
@@ -129,6 +138,7 @@ public class MainActivity extends UpdatableActivity {
             listView.setAdapter(dnemActivitiesAdapter);
         }
         dnemActivitiesAdapter.notifyDataSetChanged();
+
         LocalDate today = LocalDate.now();
         LocalDate firstOfApril = new LocalDate(LocalDate.now().getYear(), 4, 1);
         String niceDate = dateFormat.print(today);
@@ -187,7 +197,6 @@ public class MainActivity extends UpdatableActivity {
                 // Pop it
                 int myNotifId = (int) (nextBestActivity.getId() % 1000); // todo generate an ID for the notif (PK of the activity to do?)
                 builder.setContentTitle(nextBestActivity.getLabel());
-
                 notifManager.notify(myNotifId, builder.build());
             }
             else {
@@ -229,7 +238,6 @@ public class MainActivity extends UpdatableActivity {
                         }
                     });
             builder.create().show();
-
         }
     }
 }

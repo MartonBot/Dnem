@@ -52,12 +52,12 @@ public class TrackingLogsAdapter extends BaseAdapter {
             convertView = LayoutInflater.from(context).inflate(R.layout.tracking_log_item, parent, false);
         }
 
-        TextView dayText = (TextView) convertView.findViewById(R.id.date_text);
-        TextView timestampText = (TextView) convertView.findViewById(R.id.timestamp_text);
-        TextView timezoneText = (TextView) convertView.findViewById(R.id.timezone_text);
-        TextView starText = (TextView) convertView.findViewById(R.id.star_counter);
-        TextView runningStreakText = (TextView) convertView.findViewById(R.id.streak_counter);
-        ImageView starImage = (ImageView) convertView.findViewById(R.id.star_image);
+        TextView dayText = convertView.findViewById(R.id.date_text);
+        TextView timestampText = convertView.findViewById(R.id.timestamp_text);
+        TextView timezoneText = convertView.findViewById(R.id.timezone_text);
+        TextView starText = convertView.findViewById(R.id.star_counter);
+        TextView runningStreakText = convertView.findViewById(R.id.streak_counter);
+        ImageView starImage = convertView.findViewById(R.id.star_image);
 
         dayText.setText(trackingLog.getDay().toString());
         timestampText.setText(String.format("%d", trackingLog.getTimestamp()));
@@ -66,7 +66,16 @@ public class TrackingLogsAdapter extends BaseAdapter {
         runningStreakText.setText(String.format("%d", trackingLog.getStreakCounter()));
         int visibility = trackingLog.getStarCounter() >= 7 ? View.VISIBLE : View.INVISIBLE;
         starImage.setVisibility(visibility);
-        int starBackground = trackingLog.getStarCounter() >= 28 ? R.drawable.ic_star_gold_24dp : R.drawable.ic_star_silver_24dp;
+        int starBackground;
+        if (trackingLog.getStarCounter() < 14) {
+            starBackground = R.drawable.ic_star_bronze_24dp;
+        }
+        else if (trackingLog.getStarCounter() < 28) {
+            starBackground = R.drawable.ic_star_silver_24dp;
+        }
+        else {
+            starBackground = R.drawable.ic_star_gold_24dp;
+        }
         starImage.setBackground(context.getDrawable(starBackground));
 
         convertView.setOnLongClickListener(new OnTrackingLogLongClickListener(trackingLog.getId()));

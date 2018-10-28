@@ -3,6 +3,8 @@ package com.martonbot.dnem;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Parcel;
+import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
@@ -41,7 +43,8 @@ public class OnDoneClickListener implements ImageButton.OnClickListener {
             db.close();
             Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
             // Vibrate for 500 milliseconds
-            vibrator.vibrate(50);
+            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));
+
         }
     }
 

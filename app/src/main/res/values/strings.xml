@@ -66,4 +66,10 @@
     <string name="label">LABEL</string>
     <string name="current_streak">Current: %d days</string>
     <string name="best_streak">Best: %d days</string>
+    <string name="allow_cheat_days">ALLOW CHEAT DAYS</string>
+    <string name="active">ACTIVE</string>
+    <string name="schedule">SCHEDULE</string>
+    <string name="details">DETAILS</string>
+    <string name="cancel">CANCEL</string>
+    <string name="save">SAVE</string>
 </resources>

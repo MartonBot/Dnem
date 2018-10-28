@@ -50,7 +50,7 @@ public class ActivitiesAdapter extends BaseAdapter {
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
         }
-        // todo this needs to be refactored
+        // todo this needs to be refactored with the code in UiUpdater? or does it?
         TextView labelText = convertView.findViewById(R.id.label_text);
         TextView detailsText = convertView.findViewById(R.id.details_text);
         TextView streakText = convertView.findViewById(R.id.streak_text);

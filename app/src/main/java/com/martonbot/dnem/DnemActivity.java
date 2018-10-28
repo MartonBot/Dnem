@@ -23,7 +23,9 @@ public class DnemActivity {
     private boolean isActive;
     private boolean allowStars;
     private boolean weekendsOn;
+    private boolean remindersOn;
     // todo weekends on
+    // todo remindersOn
 
     public DnemActivity(long id, String label, String details, boolean isActive, boolean allowStars, boolean weekendsOn) {
         this.id = id;
@@ -105,8 +107,8 @@ public class DnemActivity {
         for (DnemTrackingLog currentLog : trackingLogs) {
             if (isFirstTrackingLog) {
                 // initialisation
-                runningStreak = 1;
-                if (allowStars()) {
+                runningStreak = 1; // we start at 1 because there is a tracking log for that day
+                if (allowStars) {
                     starCounter = 1;
                 }
                 isFirstTrackingLog = false;
@@ -116,36 +118,36 @@ public class DnemActivity {
                     throw new IllegalStateException("Previous tracking log is chronologically after current log.");
                 }
                 // let's compare the current log with the previous log and see whether the streak is conserved
-                if (keepStreakDefault(currentLog, previousLog)) {
+                int daysMissed = daysMissed(currentLog, previousLog);
+                if (daysMissed < 1) {
                     // well done! we increment the streakCount
                     runningStreak++;
                     // and the star count is incremented as well
-                    if (allowStars()) {
+                    if (allowStars) {
                         starCounter++;
                     }
                 } else {
-                    // shit we missed a day apparently
-                    // now can we patch it using the star counter, or do we simply lose the streak?
+                    // shit we missed a day, or more, apparently
+                    // now can we patch the missing day(s) using the star counter, or do we simply lose the streak?
                     // do we have a star to use?
-                    if (allowStars() && starCounter >= 7 && keepStreakWithStar(currentLog, previousLog)) {
+                    if (allowStars && daysMissed <= starStack(starCounter)) {
                         // we can patch our streak
-                        runningStreak++;
+                        runningStreak++; // the streak increases because we are on a tracking log
                     } else {
                         // we lose the streak
-                        runningStreak = 1;
+                        runningStreak = 1; // but we land on 1 because there is a tracking log for the day considered
                     }
-                    // we lose the star stack anyway because the streak was broken
-                    if (allowStars()) {
-                        starCounter = 1;
+                    // and we downgrade the star stack anyway because the streak was broken
+                    if (allowStars) {
+                        starCounter = downgradeStarCounter(starCounter, daysMissed);
                     }
-
                 }
             }
             currentLog.setStreakCounter(runningStreak);
             currentLog.setStarCounter(starCounter);
             // update the max
             maxStreak = Math.max(runningStreak, maxStreak);
-            // move
+            // move the log down the stack
             previousLog = currentLog;
         }
         // we have finished going through the tracking logs
@@ -155,15 +157,25 @@ public class DnemActivity {
             currentStreak = 0;
             bestStreak = 0;
         } else {
+            // there is at least one tracking log
             long todayStamp = new Instant().getMillis();
             DateTimeZone todayZone = DateTimeZone.getDefault();
-            if (!keepStreakDefault(todayStamp, todayZone, previousLog.getTimestamp(), previousLog.getTimezone())) {
-                if (starCounter >= 7 && keepStreakWithStar(todayStamp, todayZone, previousLog)) {
-                    // we don't lose streak
+            // has it been more than one day?
+            int daysMissed = daysMissed(todayStamp, todayZone, previousLog);
+            if (daysMissed < 1) {
+                // all good it's been less than a day, we don't lose anything
+            } else {
+                // can we patch the gap with stars?
+                if (allowStars && daysMissed < starStack(starCounter)) {
+                    // we don't lose the streak
                 } else {
+                    // we lose the streak
                     runningStreak = 0;
                 }
-                starCounter = 0;
+                if (allowStars) {
+                    // we downgrade the star counter anyways
+                    starCounter = downgradeStarCounter(starCounter, daysMissed);
+                }
             }
             currentStreak = runningStreak;
             bestStreak = maxStreak;
@@ -171,21 +183,50 @@ public class DnemActivity {
         }
     }
 
-    // todo not the most elegant
-    private boolean keepStreakDefault(DnemTrackingLog current, DnemTrackingLog previous) {
-        return Time.isStreakConserved(current.getTimestamp(), current.getTimezone(), previous.getTimestamp(), previous.getTimezone());
+    private int starStack(int starCounter) {
+        int starStack;
+        if (starCounter < 0) {
+            throw new IllegalArgumentException("The star counter cannot be negative.");
+        } else if (starCounter < 7) {
+            starStack = 0;
+        } else if (starCounter < 14) {
+            starStack = 1; // bronze
+        } else if (starCounter < 28) {
+            starStack = 2; // silver
+        } else {
+            starStack = 3; // gold
+        }
+        return starStack;
     }
 
-    private boolean keepStreakDefault(long currentTimestamp, DateTimeZone currentTimeZone, long previousTimestamp, DateTimeZone previousTimeZone) {
-        return Time.isStreakConserved(currentTimestamp, currentTimeZone, previousTimestamp, previousTimeZone);
+    private int downgradeStarCounter(int starCounter, int daysMissed) {
+        while (daysMissed > 0) {
+            starCounter = downgradeStarCounter(starCounter);
+            daysMissed--;
+        }
+        return 1;
     }
 
-    private boolean keepStreakWithStar(DnemTrackingLog current, DnemTrackingLog previous) {
-        return Time.isStreakConservedUsingStar(current.getTimestamp(), current.getTimezone(), previous.getTimestamp(), previous.getTimezone());
+    private int downgradeStarCounter(int starCounter) {
+        int remainder;
+        if (starCounter < 1) {
+            throw new IllegalArgumentException("The star counter cannot be less than one.");
+        } else if (starCounter < 14) {
+            remainder = 1; // bronze to nothing
+        } else if (starCounter < 28) {
+            remainder = 7; // silver to bronze
+        } else {
+            remainder = 14; // gold to silver
+        }
+        return remainder;
     }
 
-    private boolean keepStreakWithStar(long currentTimestamp, DateTimeZone currentTimeZone, DnemTrackingLog previous) {
-        return Time.isStreakConservedUsingStar(currentTimestamp, currentTimeZone, previous.getTimestamp(), previous.getTimezone());
+    private int daysMissed(DnemTrackingLog currentLog, DnemTrackingLog previousLog) {
+        return Time.daysMissed(currentLog.getTimestamp(), currentLog.getTimezone(), previousLog.getTimestamp(), previousLog.getTimezone());
+    }
+
+    private int daysMissed(long todayStamp, DateTimeZone todayZone, DnemTrackingLog previousLog) {
+        return Time.daysMissed(todayStamp, todayZone, previousLog.getTimestamp(), previousLog.getTimezone());
     }
 
     public boolean isActive() {

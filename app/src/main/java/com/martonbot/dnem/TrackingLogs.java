@@ -41,7 +41,7 @@ public class TrackingLogs {
         activity.addNewTrackingLog(new DnemTrackingLog(id, activityId, timestamp, today, timezone));
         // update the Android activity accordingly
         if (updatableActivity != null) {
-            updatableActivity.update();
+            updatableActivity.updateForActivity(activity);
         }
     }
 
@@ -58,7 +58,7 @@ public class TrackingLogs {
         // delete the tracking log and update the UI
         activity.removeLatestTrackinglog();
         if (updatableActivity != null) {
-            updatableActivity.update();
+            updatableActivity.updateForActivity(activity);
         }
     }
 

@@ -20,7 +20,16 @@ public class UiUpdater {
 
         int visibility = activity.getStarCounter() >= 7 ? View.VISIBLE : View.INVISIBLE;
         starImage.setVisibility(visibility);
-        int starBackground = activity.getStarCounter() >= 28 ? R.drawable.ic_star_gold_24dp : R.drawable.ic_star_silver_24dp;
+        int starBackground;
+        if (activity.getStarCounter() < 14) {
+            starBackground = R.drawable.ic_star_bronze_24dp;
+        }
+        else if (activity.getStarCounter() < 28) {
+            starBackground = R.drawable.ic_star_silver_24dp;
+        }
+        else {
+            starBackground = R.drawable.ic_star_gold_24dp;
+        }
         starImage.setBackground(context.getDrawable(starBackground));
     }
 
