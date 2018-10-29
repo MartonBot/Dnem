@@ -75,20 +75,6 @@ public class DnemActivity {
         Collections.sort(trackingLogs, Collections.<DnemTrackingLog>reverseOrder());
     }
 
-    public void addNewTrackingLog(DnemTrackingLog newTrackingLog) {
-        trackingLogs.add(0, newTrackingLog);
-        Collections.sort(trackingLogs);
-        computeStreaks();
-        Collections.sort(trackingLogs, Collections.<DnemTrackingLog>reverseOrder());
-    }
-
-    public void removeLatestTrackinglog() {
-        trackingLogs.remove(0);
-        Collections.sort(trackingLogs);
-        computeStreaks();
-        Collections.sort(trackingLogs, Collections.<DnemTrackingLog>reverseOrder());
-    }
-
     private void computeStreaks() {
         // todo take into account the preference for 'allow stars'
         if (trackingLogs == null) {
@@ -204,7 +190,7 @@ public class DnemActivity {
             starCounter = downgradeStarCounter(starCounter);
             daysMissed--;
         }
-        return 1;
+        return starCounter;
     }
 
     private int downgradeStarCounter(int starCounter) {
@@ -287,5 +273,16 @@ public class DnemActivity {
             }
         }
         return false;
+    }
+
+    public void updateTo(DnemActivity newActivity) {
+        this.id = newActivity.id;
+        this.label = newActivity.label;
+        this.details = newActivity.details;
+        this.isActive = newActivity.isActive;
+        this.allowStars = newActivity.allowStars;
+        this.weekendsOn = newActivity.weekendsOn;
+        trackingLogs.clear();
+        trackingLogs.addAll(newActivity.trackingLogs);
     }
 }

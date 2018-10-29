@@ -57,6 +57,7 @@ public class ViewActivity extends UpdatableActivity {
         if (activityId == 0) {
             throw new IllegalStateException("A valid Dnem activity ID must be passed");
         }
+        activity = ((DnemApplication) getApplicationContext()).getActivity(activityId);
 
         // UI elements
         labelText = findViewById(R.id.label_text);
@@ -86,14 +87,13 @@ public class ViewActivity extends UpdatableActivity {
 
     @Override
     protected void refreshActivityData(DnemActivity dnemActivity) {
+        // it's the same as refreshData() since the activity is centered on a specific Dnem activity
         refreshData();
     }
 
     @Override
     protected void refreshData() {
-        // here we only want to process the tracking logs for this specific Dnem activity
-        activity = ((DnemApplication) getApplicationContext()).getActivity(activityId);
-        activity.processTrackingLogs();
+        ((DnemApplication) getApplicationContext()).reloadActivityFromDb(activityId);
     }
 
     @Override

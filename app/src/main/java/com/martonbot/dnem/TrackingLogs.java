@@ -37,8 +37,6 @@ public class TrackingLogs {
 
         long id = db.insertOrThrow(Dnem.TrackingLog.T_NAME, null, trackingLogValues);
 
-        // insert the tracking log
-        activity.addNewTrackingLog(new DnemTrackingLog(id, activityId, timestamp, today, timezone));
         // update the Android activity accordingly
         if (updatableActivity != null) {
             updatableActivity.updateForActivity(activity);
@@ -55,8 +53,6 @@ public class TrackingLogs {
                 where,
                 whereArgs
         );
-        // delete the tracking log and update the UI
-        activity.removeLatestTrackinglog();
         if (updatableActivity != null) {
             updatableActivity.updateForActivity(activity);
         }

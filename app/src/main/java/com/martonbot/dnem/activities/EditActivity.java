@@ -43,13 +43,13 @@ public class EditActivity extends android.app.Activity {
         activity = activityId != 0 ? ((DnemApplication) getApplicationContext()).getActivity(activityId) : null;
 
         // set the controls
-        cancelButton = (Button) findViewById(R.id.cancel_button);
-        saveButton = (Button) findViewById(R.id.save_button);
-        labelEdit = (EditText) findViewById(R.id.label_edit);
-        detailsEdit = (EditText) findViewById(R.id.details_edit);
-        scheduleActivitySwitch = (Switch) findViewById(R.id.schedule_activity_switch);
-        allowStarsSwitch = (Switch) findViewById(R.id.cheat_days_enable_switch);
-        deleteButton = (ImageButton) findViewById(R.id.delete_button);
+        cancelButton = findViewById(R.id.cancel_button);
+        saveButton = findViewById(R.id.save_button);
+        labelEdit = findViewById(R.id.label_edit);
+        detailsEdit = findViewById(R.id.details_edit);
+        scheduleActivitySwitch = findViewById(R.id.schedule_activity_switch);
+        allowStarsSwitch = findViewById(R.id.cheat_days_enable_switch);
+        deleteButton = findViewById(R.id.delete_button);
 
         // populate the fields from the database if the activity ID was passed
         if (activity != null) {
@@ -117,8 +117,7 @@ public class EditActivity extends android.app.Activity {
                     scheduleValues);
 
             activity.setId(newActivityId);
-        }
-        else {
+        } else {
             // update
             long activityId = activity.getId();
 

@@ -18,7 +18,7 @@ public class DnemApplication extends Application {
     }
 
     public void loadActivitiesFromDb() {
-        activities = DnemDataLoader.loadAll(this);
+        activities = DnemDataLoader.loadActivities(this);
         // sort here?
         Collections.sort(activities, new Comparator<DnemActivity>() {
             @Override
@@ -29,8 +29,7 @@ public class DnemApplication extends Application {
                 if (done1 == done2) {
                     // both are done or undone
                     result = a2.getCurrentStreak() - a1.getCurrentStreak();
-                }
-                else {
+                } else {
                     result = done1 ? 1 : -1;
                 }
                 return result;
@@ -50,6 +49,15 @@ public class DnemApplication extends Application {
             }
         }
         return activity;
+    }
+
+    public void reloadActivityFromDb(long activityId) {
+        if (activities == null) {
+            throw new IllegalStateException("The list of activities must be loaded before reloading a specific one");
+        }
+        DnemActivity activityToUpdate = getActivity(activityId);
+        DnemActivity reloadedActivity = DnemDataLoader.loadActivity(this, activityId);
+        activityToUpdate.updateTo(reloadedActivity);
     }
 
 }
