@@ -72,4 +72,5 @@
     <string name="details">DETAILS</string>
     <string name="cancel">CANCEL</string>
     <string name="save">SAVE</string>
+    <string name="currentStreak">%d</string>
 </resources>

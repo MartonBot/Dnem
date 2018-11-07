@@ -23,7 +23,7 @@ public abstract class DnemFilter {
         if (!isOn) {
             return list;
         }
-        List<DnemActivity> filteredList = new LinkedList<DnemActivity>();
+        List<DnemActivity> filteredList = new LinkedList<>();
         for (DnemActivity activity : list) {
             if (evaluate(activity)) {
                 filteredList.add(activity);

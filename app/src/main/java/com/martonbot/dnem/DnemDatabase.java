@@ -2,9 +2,9 @@ package com.martonbot.dnem;
 
 import android.provider.BaseColumns;
 
-public class Dnem {
+public class DnemDatabase {
 
-    private Dnem() {
+    private DnemDatabase() {
     }
 
     public static class Activity implements BaseColumns {

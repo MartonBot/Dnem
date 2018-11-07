@@ -5,7 +5,7 @@ import android.view.View;
 import android.widget.TextView;
 
 /**
- * This class is meant to provide methods to update the UI in multiple places across the app in a consistent way. For example, the "Done" button appears in both the Main activity (in the Dnem activities list) and in the View activity.
+ * This class is meant to provide methods to update the UI in multiple places across the app in a consistent way. For example, the "Done" button appears in both the Main activity (in the DnemDatabase activities list) and in the View activity.
  */
 public class UiUpdater {
 
@@ -16,7 +16,7 @@ public class UiUpdater {
         boolean isDoneForToday = activity.isDoneForToday();
         int doneButtonBackgroundId = isDoneForToday ? R.drawable.background_button_done : R.drawable.background_button_not_done;
         doneButton.setBackground(context.getResources().getDrawable(doneButtonBackgroundId, null));
-        streakText.setText(String.format("%d", activity.getCurrentStreak()));
+        streakText.setText(String.format(context.getString(R.string.currentStreak), activity.getCurrentStreak()));
 
         int visibility = activity.getStarCounter() >= 7 ? View.VISIBLE : View.INVISIBLE;
         starImage.setVisibility(visibility);

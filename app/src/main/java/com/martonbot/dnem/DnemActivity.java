@@ -1,8 +1,9 @@
 package com.martonbot.dnem;
 
-import android.view.TextureView;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
-import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
 import org.joda.time.LocalDate;
@@ -13,7 +14,7 @@ import java.util.List;
 
 public class DnemActivity {
 
-    public List<DnemTrackingLog> trackingLogs;
+    List<DnemTrackingLog> trackingLogs;
     private long id;
     private String label;
     private String details;
@@ -27,21 +28,52 @@ public class DnemActivity {
     // todo weekends on
     // todo remindersOn
 
-    public DnemActivity(long id, String label, String details, boolean isActive, boolean allowStars, boolean weekendsOn) {
+    public DnemActivity(long id) {
         this.id = id;
-        this.label = label;
-        this.details = details;
-        this.isActive = isActive;
-        this.allowStars = allowStars;
-        this.weekendsOn = weekendsOn;
+        this.trackingLogs = new LinkedList<>();
     }
 
-    public DnemActivity() {
-        this.id = 0;
-        this.label = "";
-        this.details = "";
-        this.isActive = false;
-        this.trackingLogs = new LinkedList<>();
+    private void loadInfoFromCursor(Cursor cursor) {
+
+        int labelIndex = cursor.getColumnIndex(DnemDatabase.Activity.C_LABEL);
+        int detailsIndex = cursor.getColumnIndex(DnemDatabase.Activity.C_DETAILS);
+        int isActiveIndex = cursor.getColumnIndex(DnemDatabase.Schedule.C_IS_ACTIVE);
+        int allowStarsIndex = cursor.getColumnIndex(DnemDatabase.Schedule.C_ALLOW_STARS);
+        int weekendsOnIndex = cursor.getColumnIndex(DnemDatabase.Schedule.C_WEEKENDS_ON);
+
+        this.label = cursor.getString(labelIndex);
+        this.details = cursor.getString(detailsIndex);
+        this.isActive = cursor.getInt(isActiveIndex) > 0;
+        this.allowStars = cursor.getInt(allowStarsIndex) > 0;
+        this.weekendsOn = cursor.getInt(weekendsOnIndex) > 0;
+
+    }
+
+    void loadFromDb(Context context) {
+        SQLiteDatabase db;
+        Cursor cursor;
+
+        String querySelection = DnemDatabase.Activity.T_NAME + "." + DnemDatabase.Activity._ID + " = ?";
+        String[] querySelectionArgs = {
+                "" + id
+        };
+        db = new DnemDbHelper(context).getReadableDatabase();
+        cursor = db.query(
+                DnemDbHelper.activitiesJoinTable,
+                DnemDbHelper.activitiesProjection,
+                querySelection,
+                querySelectionArgs,
+                DnemDbHelper.activitiesGroupBy,
+                null,
+                DnemDbHelper.activitiesOrderBy
+        );
+
+        cursor.moveToNext();
+        loadInfoFromCursor(cursor);
+        cursor.close();
+        db.close();
+
+        loadTrackingLogsFromDb(context);
     }
 
     public long getId() {
@@ -64,12 +96,7 @@ public class DnemActivity {
         return bestStreak;
     }
 
-    public void setTrackingLogs(List<DnemTrackingLog> trackingLogs) {
-        this.trackingLogs = trackingLogs; // at this stage the list is in descending order, most recent first
-        processTrackingLogs();
-    }
-
-    public void processTrackingLogs() {
+    private void processTrackingLogs() {
         Collections.sort(trackingLogs);
         computeStreaks();
         Collections.sort(trackingLogs, Collections.<DnemTrackingLog>reverseOrder());
@@ -152,7 +179,7 @@ public class DnemActivity {
                 // all good it's been less than a day, we don't lose anything
             } else {
                 // can we patch the gap with stars?
-                if (allowStars && daysMissed < starStack(starCounter)) {
+                if (allowStars && daysMissed <= starStack(starCounter)) {
                     // we don't lose the streak
                 } else {
                     // we lose the streak
@@ -241,28 +268,34 @@ public class DnemActivity {
 
     public void setWeekendsOn(boolean on) {
         weekendsOn = on;
-    }
+    } // todo
 
     public void setId(long id) {
         this.id = id;
     }
 
-    public boolean isDoneForToday() {
-        boolean isDone = false;
+    boolean isDoneForToday() {
+        return getTodayTrackingLog() != null;
+    }
+
+    public DnemTrackingLog getTodayTrackingLog() {
+        DnemTrackingLog tl = null;
         if (trackingLogs != null && trackingLogs.size() > 0) {
             DnemTrackingLog mostRecentTrackingLog = getMostRecentTrackingLog();
             DateTimeZone timezone = mostRecentTrackingLog.getTimezone();
             long timestamp = mostRecentTrackingLog.getTimestamp();
-            isDone = new LocalDate(timestamp, timezone).equals(Time.today());
+            if (new LocalDate(timestamp, timezone).equals(Time.today())) {
+                tl = mostRecentTrackingLog;
+            }
         }
-        return isDone;
+        return tl;
     }
 
-    public int getStarCounter() {
+    int getStarCounter() {
         return starCounter;
     }
 
-    public DnemTrackingLog getMostRecentTrackingLog() {
+    private DnemTrackingLog getMostRecentTrackingLog() {
         return trackingLogs.get(0);
     }
 
@@ -275,14 +308,74 @@ public class DnemActivity {
         return false;
     }
 
-    public void updateTo(DnemActivity newActivity) {
-        this.id = newActivity.id;
-        this.label = newActivity.label;
-        this.details = newActivity.details;
-        this.isActive = newActivity.isActive;
-        this.allowStars = newActivity.allowStars;
-        this.weekendsOn = newActivity.weekendsOn;
-        trackingLogs.clear();
-        trackingLogs.addAll(newActivity.trackingLogs);
+    void loadTrackingLogsFromDb(Context context) {
+
+        String[] queryProjection = {
+                DnemDatabase.TrackingLog._ID,
+                DnemDatabase.TrackingLog.C_UTC_DAY,
+                DnemDatabase.TrackingLog.C_TIMESTAMP,
+                DnemDatabase.TrackingLog.C_TIMEZONE
+        };
+
+        String querySelection = DnemDatabase.TrackingLog.T_NAME + "." + DnemDatabase.TrackingLog.C_ACTIVITY_ID + " = ?"
+                + " AND " + DnemDatabase.TrackingLog.T_NAME + "." + DnemDatabase.TrackingLog.C_TIMESTAMP + " <= ?";
+        String[] querySelectionArgs = {
+                "" + this.id,
+                "" + new Instant().getMillis()
+        };
+
+        String orderBy = DnemDatabase.TrackingLog.C_TIMESTAMP + " DESC";
+
+        SQLiteDatabase db = new DnemDbHelper(context).getReadableDatabase();
+        Cursor cursor = db.query(
+                DnemDatabase.TrackingLog.T_NAME,
+                queryProjection,
+                querySelection,
+                querySelectionArgs,
+                null,
+                null,
+                orderBy
+        );
+
+        List<DnemTrackingLog> trackingLogs = new LinkedList<>();
+
+        // indices
+        int trackingLogIdIndex = cursor.getColumnIndex(DnemDatabase.TrackingLog._ID);
+        int timezoneIndex = cursor.getColumnIndex(DnemDatabase.TrackingLog.C_TIMEZONE);
+        int timestampIndex = cursor.getColumnIndex(DnemDatabase.TrackingLog.C_TIMESTAMP);
+        int dayIndex = cursor.getColumnIndex(DnemDatabase.TrackingLog.C_UTC_DAY);
+
+        while (cursor.moveToNext()) {
+            long trackingLogId = cursor.getLong(trackingLogIdIndex);
+            DateTimeZone timezone = DateTimeZone.forID(cursor.getString(timezoneIndex));
+            long timestamp = cursor.getLong(timestampIndex);
+            LocalDate day = new LocalDate(cursor.getString(dayIndex));
+            DnemTrackingLog trackingLog = new DnemTrackingLog(trackingLogId, id, timestamp, day, timezone);
+            trackingLogs.add(trackingLog);
+        }
+        cursor.close();
+        db.close();
+        // set the tracking logs in the list
+        this.trackingLogs.clear();
+        this.trackingLogs.addAll(trackingLogs);
+        // process them
+        processTrackingLogs();
     }
+
+    /**
+     * This method should be called when inserting a new tracking log in the database, so that the DnemDatabase activity it belongs to can reload its tracking logs from the database and process them.
+     *
+     * @param context the context from which the method is called
+     */
+    public void onTrackingLogInserted(Context context) {
+        // a tracking log has been inserted for this activity
+        // we need to reload all the tracking logs for this activity
+        loadTrackingLogsFromDb(context);
+    }
+
+    public void onTrackingLogDeleted(Context context) {
+        // todo we could just remove it from the list instead of doing a whole reload of the database
+        loadTrackingLogsFromDb(context);
+    }
+
 }

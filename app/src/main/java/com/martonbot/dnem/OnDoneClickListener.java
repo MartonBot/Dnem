@@ -2,8 +2,6 @@ package com.martonbot.dnem;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.database.sqlite.SQLiteDatabase;
-import android.os.Parcel;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.support.v7.app.AlertDialog;
@@ -14,13 +12,13 @@ import com.martonbot.dnem.activities.UpdatableActivity;
 
 public class OnDoneClickListener implements ImageButton.OnClickListener {
 
-    private DnemActivity activity;
+    private DnemActivity dnem;
     private UpdatableActivity updatableActivity;
     private Context context;
 
     // todo change parameter, pass adapter instead
     public OnDoneClickListener(Context context, UpdatableActivity updatableActivity, DnemActivity activity) {
-        this.activity = activity;
+        this.dnem = activity;
         this.context = context;
 
         // to update the activity's UI
@@ -29,21 +27,19 @@ public class OnDoneClickListener implements ImageButton.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        boolean isDoneForToday = activity.isDoneForToday();
+        boolean isDoneForToday = dnem.isDoneForToday();
         if (isDoneForToday) {
-            DnemTrackingLog trackingLog = activity.trackingLogs.get(0);
+            DnemTrackingLog trackingLog = dnem.getTodayTrackingLog();
             long trackingLogId = trackingLog.getId();
             AlertDialog.Builder adBuilder = new AlertDialog.Builder(context);
             ConfirmUndoClickListener confirmUndoClickListener = new ConfirmUndoClickListener(trackingLogId);
             adBuilder.setMessage("Undo for today?").setPositiveButton("Yup", confirmUndoClickListener).setNegativeButton("Nope", confirmUndoClickListener).show();
         } else {
             // insert the tracking log
-            SQLiteDatabase db = new DnemDbHelper(context).getWritableDatabase();
-            TrackingLogs.insert(db, activity, updatableActivity);
-            db.close();
+            TrackingLogs.insert(dnem, updatableActivity);
             Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-            // Vibrate for 500 milliseconds
-            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE));
+            // Vibrate for 200 milliseconds
+            vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE));
 
         }
     }
@@ -61,9 +57,7 @@ public class OnDoneClickListener implements ImageButton.OnClickListener {
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE:
-                    SQLiteDatabase db = new DnemDbHelper(context).getWritableDatabase();
-                    TrackingLogs.delete(db, trackingLogId,activity, updatableActivity);
-                    db.close();
+                    TrackingLogs.delete(trackingLogId, dnem, updatableActivity);
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;

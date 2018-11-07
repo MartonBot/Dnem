@@ -20,12 +20,10 @@ import com.martonbot.dnem.Constants;
 import com.martonbot.dnem.DnemActivity;
 import com.martonbot.dnem.DnemApplication;
 import com.martonbot.dnem.DnemChannels;
+import com.martonbot.dnem.DnemList;
 import com.martonbot.dnem.Preferences;
 import com.martonbot.dnem.R;
-import com.martonbot.dnem.filters.DnemFilter;
-import com.martonbot.dnem.filters.IsActiveFilter;
-import com.martonbot.dnem.filters.IsUndoneFilter;
-import com.martonbot.dnem.filters.ThreeDaysStreakFilter;
+import com.martonbot.dnem.filters.Filter;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
@@ -36,7 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * The main activity that displays the date and a list of Dnem activities to do, in order of priority
+ * The main activity that displays the date and a list of DnemDatabase activities to do, in order of priority
  */
 public class MainActivity extends UpdatableActivity {
 
@@ -49,34 +47,26 @@ public class MainActivity extends UpdatableActivity {
     private TextView dateText;
     private ListView listView;
 
-    // adapter for the Dnem activities list
-    private ActivitiesAdapter dnemActivitiesAdapter;
+    private DnemList dnemList;
 
-    // filters
-    // todo rethink the way filters are implemented, because it's not satisfying
-    private DnemFilter isActiveFilter = new IsActiveFilter();
-    private DnemFilter isUndoneFilter = new IsUndoneFilter();
-    private DnemFilter threeDaysStreakFilter = new ThreeDaysStreakFilter();
-
-    private DnemApplication globalContext;
+    // adapter for the DnemDatabase activities list
+    private ActivitiesAdapter dnemsAdapter;
 
     private DateTimeFormatter dateFormat = DateTimeFormat.forPattern("dd MMMM yyyy");
     private DateTimeFormatter weekdayFormat = DateTimeFormat.forPattern("EEEE");
-
-    // the list of Dnem activities, we get them from the globalContext object
-    private List<DnemActivity> activities;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // get the shared preferences and the global context
         sharedPreferences = getSharedPreferences(Constants.APP_NAME, MODE_PRIVATE);
-        globalContext = ((DnemApplication) getApplicationContext());
 
         // run this to capture the timezone the first time the app is run
         onFirstRun();
+
+        // get the list of Dnems from the application context
+        dnemList = ((DnemApplication) getApplicationContext()).getDnemList();
 
         // UI elements
         listView = findViewById(R.id.listView);
@@ -86,13 +76,21 @@ public class MainActivity extends UpdatableActivity {
         weekdayText = findViewById(R.id.weekday_text);
         dateText = findViewById(R.id.date_text);
 
+        // list adapter for Dnems
+        dnemsAdapter = new ActivitiesAdapter(MainActivity.this, MainActivity.this, dnemList.getFilteredDnems());
+        listView.setAdapter(dnemsAdapter);
+
         // set listeners on buttons
         addButton.setOnClickListener(new OnAddButtonClickListener());
         filtersButton.setOnClickListener(new OnFiltersButtonClickListener());
         notifButton.setOnClickListener(new OnNotifButtonClickListener());
+    }
 
-        // set the isActiveFilter to its saved value
-        isActiveFilter.switchOn(sharedPreferences.getBoolean(Preferences.PREF_IS_ACTIVE_FILTER_ON, true));
+    @Override
+    protected void onResume() {
+        super.onResume();
+        dnemList.sortDnems();
+        applyFilters();
     }
 
     /**
@@ -113,31 +111,8 @@ public class MainActivity extends UpdatableActivity {
     }
 
     @Override
-    protected void refreshActivityData(DnemActivity dnemActivity) {
-        dnemActivity.processTrackingLogs();
-    }
-
-    @Override
-    protected void refreshData() {
-        if (activities == null) {
-            activities = new LinkedList<>();
-        }
-        // empty the list of dnem activities
-        activities.clear();
-        globalContext.loadActivitiesFromDb();
-        // only add active Dnem activities with the isActiveFilter filter
-        activities.addAll(isActiveFilter.filter(globalContext.getActivities()));
-    }
-
-    @Override
-    protected void updateUi() {
-        // todo consider adding a fireworks/confetti animation when completing all active activities
-        // todo https://github.com/plattysoft/Leonids
-        if (dnemActivitiesAdapter == null) {
-            dnemActivitiesAdapter = new ActivitiesAdapter(MainActivity.this, MainActivity.this, activities);
-            listView.setAdapter(dnemActivitiesAdapter);
-        }
-        dnemActivitiesAdapter.notifyDataSetChanged();
+    public void update() {
+        dnemsAdapter.notifyDataSetChanged();
 
         LocalDate today = LocalDate.now();
         LocalDate firstOfApril = new LocalDate(LocalDate.now().getYear(), 4, 1);
@@ -147,15 +122,18 @@ public class MainActivity extends UpdatableActivity {
         }
         weekdayText.setText(weekdayFormat.print(today));
         dateText.setText(niceDate);
+        // todo consider adding a fireworks/confetti animation when completing all active activities
+        // todo https://github.com/plattysoft/Leonids
     }
 
     /**
-     * When pressing the new Dnem activity button
+     * When pressing the new DnemDatabase activity button
      */
     private class OnAddButtonClickListener implements ImageButton.OnClickListener {
         @Override
         public void onClick(View view) {
             Intent editActivity = new Intent(MainActivity.this, EditActivity.class);
+            editActivity.putExtra(Constants.EXTRA_ACTION, Constants.ACTION_NEW);
             startActivity(editActivity);
         }
     }
@@ -163,17 +141,11 @@ public class MainActivity extends UpdatableActivity {
     private class OnNotifButtonClickListener implements ImageButton.OnClickListener {
         @Override
         public void onClick(View view) {
-            globalContext.loadActivitiesFromDb();
-            List<DnemActivity> nextBestActivities = globalContext.getActivities();
-            IsActiveFilter isActive = new IsActiveFilter();
-            isActive.switchOn(true);
-            ThreeDaysStreakFilter threeDaysStreak = new ThreeDaysStreakFilter();
-            threeDaysStreak.switchOn(true);
-            IsUndoneFilter isUndone = new IsUndoneFilter();
-            isUndone.switchOn(true);
-            List<DnemActivity> nextBestActiveActivities = isActive.filter(threeDaysStreak.filter(isUndone.filter(nextBestActivities)));
-            if (!nextBestActiveActivities.isEmpty()) {
-                DnemActivity nextBestActivity = nextBestActiveActivities.get(0);
+            DnemList dnemList = ((DnemApplication) getApplicationContext()).getDnemList();
+            List<DnemActivity> nextBestActivities = dnemList.getDnems();
+
+            if (!nextBestActivities.isEmpty()) {
+                DnemActivity nextBestActivity = nextBestActivities.get(0);
                 String notifText = "Dont lose your " + nextBestActivity.getCurrentStreak() + " days streak";
 
                 Notification.Builder builder = new Notification.Builder(MainActivity.this, DnemChannels.REMINDERS);
@@ -198,8 +170,7 @@ public class MainActivity extends UpdatableActivity {
                 int myNotifId = (int) (nextBestActivity.getId() % 1000); // todo generate an ID for the notif (PK of the activity to do?)
                 builder.setContentTitle(nextBestActivity.getLabel());
                 notifManager.notify(myNotifId, builder.build());
-            }
-            else {
+            } else {
                 Toast.makeText(MainActivity.this, "No activity to be reminded of", Toast.LENGTH_SHORT).show();
             }
         }
@@ -214,8 +185,9 @@ public class MainActivity extends UpdatableActivity {
             CharSequence[] items = new CharSequence[]{
                     "Inactive"
             };
+            boolean showInactive = !sharedPreferences.getBoolean(Preferences.PREF_IS_ACTIVE_FILTER_ON, true);
             boolean[] checkedItems = new boolean[]{
-                    !sharedPreferences.getBoolean(Preferences.PREF_IS_ACTIVE_FILTER_ON, true)
+                    showInactive
             };
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setTitle("Filters");
@@ -227,17 +199,31 @@ public class MainActivity extends UpdatableActivity {
                         spEditor.putBoolean(Preferences.PREF_IS_ACTIVE_FILTER_ON, !isChecked);
                     }
                     spEditor.apply();
-                    // also switch the filter
-                    isActiveFilter.switchOn(!isChecked);
                 }
             })
                     .setOnDismissListener(new DialogInterface.OnDismissListener() {
                         @Override
                         public void onDismiss(DialogInterface dialog) {
+                            applyFilters();
+                            // and update the activity
                             update();
                         }
                     });
             builder.create().show();
         }
+    }
+
+    private void applyFilters() {
+        boolean activeFilter = sharedPreferences.getBoolean(Preferences.PREF_IS_ACTIVE_FILTER_ON, false);
+        List<Filter> filters = new LinkedList<>();
+        if (activeFilter) {
+            filters.add(new Filter() {
+                @Override
+                public boolean evaluate(DnemActivity dnem) {
+                    return dnem.isActive();
+                }
+            });
+        }
+        dnemList.applyFilters(filters);
     }
 }

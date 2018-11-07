@@ -13,39 +13,40 @@ import com.martonbot.dnem.activities.UpdatableActivity;
 import java.util.List;
 
 /**
- * An adapter for the list of Dnem activities to be displayed in the main activity
+ * An adapter for the list of DnemDatabase dnems to be displayed in the main activity
  */
 public class ActivitiesAdapter extends BaseAdapter {
+    // todo rename to DnemsAdapter
 
-    private List<DnemActivity> activities;
+    private List<DnemActivity> dnems;
     private Context context;
     private UpdatableActivity updatableActivity;
 
-    public ActivitiesAdapter(Context context, UpdatableActivity updatableActivity, List<DnemActivity> activities) {
+    public ActivitiesAdapter(Context context, UpdatableActivity updatableActivity, List<DnemActivity> dnems) {
         this.context = context;
-        this.activities = activities;
+        this.dnems = dnems;
         this.updatableActivity = updatableActivity;
     }
 
     @Override
     public int getCount() {
-        return activities.size();
+        return dnems.size();
     }
 
     @Override
     public Object getItem(int position) {
-        return activities.get(position);
+        return dnems.get(position);
     }
 
     @Override
     public long getItemId(int position) {
-        return activities.get(position).getId();
+        return dnems.get(position).getId();
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
-        DnemActivity activity = activities.get(position);
+        DnemActivity activity = dnems.get(position);
 
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);

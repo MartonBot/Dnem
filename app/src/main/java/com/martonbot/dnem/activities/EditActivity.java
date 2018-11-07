@@ -1,9 +1,11 @@
 package com.martonbot.dnem.activities;
 
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,10 +13,11 @@ import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import com.martonbot.dnem.Dnem.Activity;
-import com.martonbot.dnem.Dnem.Schedule;
+import com.martonbot.dnem.Constants;
 import com.martonbot.dnem.DnemActivity;
 import com.martonbot.dnem.DnemApplication;
+import com.martonbot.dnem.DnemDatabase.Activity;
+import com.martonbot.dnem.DnemDatabase.Schedule;
 import com.martonbot.dnem.DnemDbHelper;
 import com.martonbot.dnem.R;
 
@@ -28,19 +31,20 @@ public class EditActivity extends android.app.Activity {
     private Switch allowStarsSwitch;
     private ImageButton deleteButton;
 
-    private SQLiteDatabase db;
     private DnemActivity activity;
+    private int action;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // get the activity ID from the intent if it was passed
-        long activityId = getIntent().getLongExtra("EXTRA_ACTIVITY_ID", 0);
+        long activityId = getIntent().getLongExtra(Constants.EXTRA_ACTIVITY_ID, 0);
+        action = getIntent().getIntExtra(Constants.EXTRA_ACTION, 0);
 
         setContentView(R.layout.activity_edit);
 
-        activity = activityId != 0 ? ((DnemApplication) getApplicationContext()).getActivity(activityId) : null;
+        activity = activityId != 0 ? ((DnemApplication) getApplicationContext()).getDnemList().getDnem(activityId) : null;
 
         // set the controls
         cancelButton = findViewById(R.id.cancel_button);
@@ -66,91 +70,72 @@ public class EditActivity extends android.app.Activity {
 
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // create the database to read and write
-        db = new DnemDbHelper(EditActivity.this).getWritableDatabase();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        db.close();
-    }
-
-    private void saveActivity() {
-
-        // if the activity doesn't exist yet, create it
-        if (activity == null) {
-            activity = new DnemActivity();
-        }
-
-        // first edit the DnemActivity
-        activity.setLabel(labelEdit.getText().toString());
-        activity.setDetails(detailsEdit.getText().toString());
-        activity.setActive(scheduleActivitySwitch.isChecked());
-        activity.setAllowStars(allowStarsSwitch.isChecked());
-
-        // Activity
+    private ContentValues buildDnemValuesFromUi() {
+        String label = labelEdit.getText().toString();
+        String details = detailsEdit.getText().toString();
         ContentValues activityValues = new ContentValues();
-        activityValues.put(Activity.C_LABEL, activity.getLabel());
-        activityValues.put(Activity.C_DETAILS, activity.getDetails());
+        activityValues.put(Activity.C_LABEL, label);
+        activityValues.put(Activity.C_DETAILS, details);
+        return activityValues;
+    }
 
-        // Schedule
+    private ContentValues buildScheduleValuesFromUi() {
+        boolean isActive = scheduleActivitySwitch.isChecked();
+        boolean allowStars = allowStarsSwitch.isChecked();
         ContentValues scheduleValues = new ContentValues();
-        scheduleValues.put(Schedule.C_IS_ACTIVE, activity.isActive());
-        scheduleValues.put(Schedule.C_ALLOW_STARS, activity.allowStars());
+        scheduleValues.put(Schedule.C_IS_ACTIVE, isActive);
+        scheduleValues.put(Schedule.C_ALLOW_STARS, allowStars);
+        return scheduleValues;
+    }
 
-        if (activity.getId() == 0) {
-            // insert a new one
-            long newActivityId = db.insert(
+    /**
+     * If the dnem doesn't exist yet in the database.
+     */
+    private void insertDnem() {
+
+        boolean success = false;
+        long newDnemId = 0;
+        SQLiteDatabase db = new DnemDbHelper(EditActivity.this).getWritableDatabase();
+        db.beginTransaction();
+        try {
+
+            newDnemId = db.insert(
                     Activity.T_NAME,
                     null,
-                    activityValues);
+                    buildDnemValuesFromUi());
+            ContentValues scheduleValues = buildScheduleValuesFromUi();
 
-            scheduleValues.put(Schedule.C_ACTIVITY_ID, newActivityId); // this is where we set the foreign key
-
-            long newScheduleId = db.insert(
+            scheduleValues.put(Schedule.C_ACTIVITY_ID, newDnemId); // this is where we set the foreign key
+            long scheduleId = db.insert(
                     Schedule.T_NAME,
                     null,
                     scheduleValues);
 
-            activity.setId(newActivityId);
-        } else {
-            // update
-            long activityId = activity.getId();
-
-            String activitySelection = Activity._ID + " = ?";
-            String[] activitySelectionArgs = {
-                    "" + activityId
-            };
-
-            String scheduleSelection = Schedule.C_ACTIVITY_ID + " = ?";
-            String[] scheduleSelectionArgs = {
-                    "" + activityId
-            };
-
-            int activityCount = db.update(
-                    Activity.T_NAME,
-                    activityValues,
-                    activitySelection,
-                    activitySelectionArgs);
-
-            int scheduleCount = db.update(
-                    Schedule.T_NAME,
-                    scheduleValues,
-                    scheduleSelection,
-                    scheduleSelectionArgs);
-
-            if (activityCount != scheduleCount) {
+            if (newDnemId == -1 || scheduleId == -1) {
                 throw new IllegalStateException("Illegal database state");
             }
+            db.setTransactionSuccessful();
+            success = true;
+
+        } catch (IllegalStateException e) {
+            Toast.makeText(EditActivity.this, "Failed to insert the new Dnem into the database.", Toast.LENGTH_SHORT).show();
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
+
+        if (success) {
+            ((DnemApplication) getApplicationContext()).getDnemList().onDnemInserted(EditActivity.this, newDnemId);
         }
     }
 
-    private void deleteActivity() {
+    /**
+     * If the dnem doesn't exist yet in the database.
+     */
+    private void updateDnem() {
+        boolean success = false;
         long activityId = activity.getId();
+
         String activitySelection = Activity._ID + " = ?";
         String[] activitySelectionArgs = {
                 "" + activityId
@@ -160,15 +145,57 @@ public class EditActivity extends android.app.Activity {
         String[] scheduleSelectionArgs = {
                 "" + activityId
         };
-        db.delete(Schedule.T_NAME,
-                scheduleSelection,
-                scheduleSelectionArgs);
+
+        SQLiteDatabase db = new DnemDbHelper(EditActivity.this).getWritableDatabase();
+        db.beginTransaction();
+        try {
+            int activityCount = db.update(
+                    Activity.T_NAME,
+                    buildDnemValuesFromUi(),
+                    activitySelection,
+                    activitySelectionArgs);
+
+            int scheduleCount = db.update(
+                    Schedule.T_NAME,
+                    buildScheduleValuesFromUi(),
+                    scheduleSelection,
+                    scheduleSelectionArgs);
+
+            if (activityCount != 1 || scheduleCount != 1) {
+                throw new IllegalStateException("Illegal database state");
+            }
+            db.setTransactionSuccessful();
+            success = true;
+        } catch (IllegalStateException e) {
+            Toast.makeText(EditActivity.this, "Failed to update the Dnem in the database.", Toast.LENGTH_SHORT).show();
+        } finally {
+            db.endTransaction();
+            db.close();
+        }
+
+        if (success) {
+            ((DnemApplication) getApplicationContext()).getDnemList().onDnemUpdated(EditActivity.this, activityId);
+        }
+
+    }
+
+    private void deleteActivity() {
+        long activityId = activity.getId();
+        String activitySelection = Activity._ID + " = ?";
+        String[] activitySelectionArgs = {
+                "" + activityId
+        };
+
+        SQLiteDatabase db = new DnemDbHelper(EditActivity.this).getWritableDatabase();
 
         db.delete(Activity.T_NAME,
                 activitySelection,
                 activitySelectionArgs);
 
-        Toast.makeText(EditActivity.this, "deleted", Toast.LENGTH_SHORT).show();
+        db.close();
+
+        ((DnemApplication) getApplicationContext()).getDnemList().onDnemDeleted(activityId);
+
     }
 
     private class SaveButtonOnClickListener implements View.OnClickListener {
@@ -176,19 +203,22 @@ public class EditActivity extends android.app.Activity {
         @Override
         public void onClick(View v) {
 
-            db.beginTransaction();
-            try {
-                saveActivity();
-                db.setTransactionSuccessful();
-                Toast.makeText(EditActivity.this, "Activity saved", Toast.LENGTH_SHORT).show();
-            } catch (IllegalStateException e) {
-                Toast.makeText(EditActivity.this, "Failed to save the activity", Toast.LENGTH_SHORT).show();
-            } finally {
-                db.endTransaction();
+            switch (action) {
+                case Constants.ACTION_EDIT:
+                    updateDnem();
+                    // notify the list of Dnems that it should reload the updated Dnem
+                    break;
+                case Constants.ACTION_NEW:
+                    insertDnem();
+                    // notify the list of Dnems that it should load the new Dnem from the db
+                    break;
+                default:
+                    throw new IllegalStateException("The action is invalid");
             }
 
             // leave activity
             finish();
+            // todo here, when we go back to the Main activity we don't see the newly created Dnem. fix that
         }
     }
 
@@ -204,23 +234,36 @@ public class EditActivity extends android.app.Activity {
 
         @Override
         public void onClick(View v) {
-            // delete the activity if it exists
-            if (activity != null) {
-                db.beginTransaction();
-                try {
-                    deleteActivity();
-                    db.setTransactionSuccessful();
-                } catch (Exception e) {
-                } finally {
-                    db.endTransaction();
-                }
-            }
+            AlertDialog.Builder adBuilder = new AlertDialog.Builder(EditActivity.this);
+            ConfirmDeleteClickListener confirmDeleteClickListener = new ConfirmDeleteClickListener();
+            adBuilder.setMessage("Do you really want to delete this Dnem? All the history will be lost.").setPositiveButton("Delete it", confirmDeleteClickListener).setNegativeButton("Never mind", confirmDeleteClickListener).show();
 
-            // leave activity
-            finish();
-            Intent mainActivity = new Intent(EditActivity.this, MainActivity.class);
-            mainActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Will clear out your activity history stack till now
-            startActivity(mainActivity);
+
         }
     }
+
+    private class ConfirmDeleteClickListener implements DialogInterface.OnClickListener {
+
+        @Override
+        public void onClick(DialogInterface dialogInterface, int which) {
+            switch (which) {
+                case DialogInterface.BUTTON_POSITIVE:
+
+                    // delete the activity if it exists
+                    if (activity != null) {
+                        deleteActivity();
+                    }
+
+                    // go directly to the main activity
+                    Intent mainActivity = new Intent(EditActivity.this, MainActivity.class);
+                    mainActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); // Will clear out your activity history stack till now
+                    startActivity(mainActivity);
+                    break;
+
+                case DialogInterface.BUTTON_NEGATIVE:
+                    break;
+            }
+        }
+    }
+
 }

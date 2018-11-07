@@ -2,7 +2,6 @@ package com.martonbot.dnem;
 
 import android.content.Context;
 import android.content.DialogInterface;
-import android.database.sqlite.SQLiteDatabase;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -69,11 +68,9 @@ public class TrackingLogsAdapter extends BaseAdapter {
         int starBackground;
         if (trackingLog.getStarCounter() < 14) {
             starBackground = R.drawable.ic_star_bronze_24dp;
-        }
-        else if (trackingLog.getStarCounter() < 28) {
+        } else if (trackingLog.getStarCounter() < 28) {
             starBackground = R.drawable.ic_star_silver_24dp;
-        }
-        else {
+        } else {
             starBackground = R.drawable.ic_star_gold_24dp;
         }
         starImage.setBackground(context.getDrawable(starBackground));
@@ -87,7 +84,7 @@ public class TrackingLogsAdapter extends BaseAdapter {
 
         private long trackingLogId;
 
-        public OnTrackingLogLongClickListener(long trackingLogId) {
+        OnTrackingLogLongClickListener(long trackingLogId) {
             this.trackingLogId = trackingLogId;
         }
 
@@ -104,7 +101,7 @@ public class TrackingLogsAdapter extends BaseAdapter {
 
         private long trackingLogId;
 
-        public ConfirmDeleteClickListener(long trackingLogId) {
+        ConfirmDeleteClickListener(long trackingLogId) {
             this.trackingLogId = trackingLogId;
         }
 
@@ -112,9 +109,7 @@ public class TrackingLogsAdapter extends BaseAdapter {
         public void onClick(DialogInterface dialogInterface, int which) {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE:
-                    SQLiteDatabase db = new DnemDbHelper(context).getWritableDatabase();
-                    TrackingLogs.delete(db, trackingLogId, activity, updatableActivity);
-                    db.close();
+                    TrackingLogs.delete(trackingLogId, activity, updatableActivity);
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;
