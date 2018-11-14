@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 import com.martonbot.dnem.ActivitiesAdapter;
 import com.martonbot.dnem.Constants;
-import com.martonbot.dnem.DnemActivity;
+import com.martonbot.dnem.Dnem;
 import com.martonbot.dnem.DnemApplication;
 import com.martonbot.dnem.DnemChannels;
 import com.martonbot.dnem.DnemList;
@@ -66,6 +66,7 @@ public class MainActivity extends UpdatableActivity {
         onFirstRun();
 
         // get the list of Dnems from the application context
+        // todo this should be done in a background thread
         dnemList = ((DnemApplication) getApplicationContext()).getDnemList();
 
         // UI elements
@@ -142,10 +143,10 @@ public class MainActivity extends UpdatableActivity {
         @Override
         public void onClick(View view) {
             DnemList dnemList = ((DnemApplication) getApplicationContext()).getDnemList();
-            List<DnemActivity> nextBestActivities = dnemList.getDnems();
+            List<Dnem> nextBestActivities = dnemList.getDnems();
 
             if (!nextBestActivities.isEmpty()) {
-                DnemActivity nextBestActivity = nextBestActivities.get(0);
+                Dnem nextBestActivity = nextBestActivities.get(0);
                 String notifText = "Dont lose your " + nextBestActivity.getCurrentStreak() + " days streak";
 
                 Notification.Builder builder = new Notification.Builder(MainActivity.this, DnemChannels.REMINDERS);
@@ -219,7 +220,7 @@ public class MainActivity extends UpdatableActivity {
         if (activeFilter) {
             filters.add(new Filter() {
                 @Override
-                public boolean evaluate(DnemActivity dnem) {
+                public boolean evaluate(Dnem dnem) {
                     return dnem.isActive();
                 }
             });

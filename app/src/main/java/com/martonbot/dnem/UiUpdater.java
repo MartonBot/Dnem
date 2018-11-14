@@ -9,7 +9,7 @@ import android.widget.TextView;
  */
 public class UiUpdater {
 
-    public static void updateDoneButton(Context context, DnemActivity activity, TextView labelText, TextView detailsText, View doneButton, TextView streakText, View starImage) {
+    public static void updateDoneButton(Context context, Dnem activity, TextView labelText, TextView detailsText, View doneButton, TextView streakText, View starImage) {
         labelText.setText(activity.getLabel());
         detailsText.setText(activity.getDetails());
 

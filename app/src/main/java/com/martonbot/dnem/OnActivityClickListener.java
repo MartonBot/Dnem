@@ -12,10 +12,10 @@ import com.martonbot.dnem.activities.ViewActivity;
 
 public class OnActivityClickListener implements View.OnClickListener {
 
-    private DnemActivity activity;
+    private Dnem activity;
     private Context context;
 
-    public OnActivityClickListener(Context context, DnemActivity activity) {
+    public OnActivityClickListener(Context context, Dnem activity) {
         this.context = context;
         this.activity = activity;
     }

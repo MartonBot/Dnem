@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.martonbot.dnem.activities.UpdatableActivity;
-import com.martonbot.dnem.activities.ViewActivity;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
@@ -18,13 +17,13 @@ public class TrackingLogs {
      * @param dnem          the DnemDatabase activity for which to insert the tracking log
      * @param updatableActivity the updatable Android activity whose UI should be refreshed
      */
-    static void insert(DnemActivity dnem, UpdatableActivity updatableActivity) {
+    static void insert(Dnem dnem, UpdatableActivity updatableActivity) {
         Instant now = new Instant();
         long timestamp = now.getMillis();
         insert(dnem, updatableActivity, timestamp);
     }
 
-    public static void insert(DnemActivity dnem, UpdatableActivity updatableActivity, long timestamp) {
+    public static void insert(Dnem dnem, UpdatableActivity updatableActivity, long timestamp) {
         DateTimeZone timezone = DateTimeZone.getDefault();
         LocalDate today = new LocalDate(timestamp, timezone);
         long activityId = dnem.getId();
@@ -47,7 +46,7 @@ public class TrackingLogs {
         }
     }
 
-    static void delete(long trackingLogId, DnemActivity dnemActivity, UpdatableActivity updatableActivity) {
+    static void delete(long trackingLogId, Dnem dnem, UpdatableActivity updatableActivity) {
         String where = DnemDatabase.TrackingLog._ID + " =? ";
         String[] whereArgs = new String[]{
                 "" + trackingLogId
@@ -63,7 +62,7 @@ public class TrackingLogs {
         db.close();
 
         if (updatableActivity != null) {
-            dnemActivity.onTrackingLogDeleted(updatableActivity); // the updatable activity is the context
+            dnem.onTrackingLogDeleted(updatableActivity); // the updatable activity is the context
             updatableActivity.update();
         }
     }

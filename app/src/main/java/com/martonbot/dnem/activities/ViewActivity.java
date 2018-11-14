@@ -12,7 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.martonbot.dnem.Constants;
-import com.martonbot.dnem.DnemActivity;
+import com.martonbot.dnem.Dnem;
 import com.martonbot.dnem.DnemApplication;
 import com.martonbot.dnem.OnDoneClickListener;
 import com.martonbot.dnem.R;
@@ -39,7 +39,7 @@ public class ViewActivity extends UpdatableActivity {
     private ImageView starImage;
     private TrackingLogsAdapter trackingLogsAdapter;
 
-    private DnemActivity dnem;
+    private Dnem dnem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

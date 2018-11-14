@@ -14,7 +14,7 @@ import android.widget.Switch;
 import android.widget.Toast;
 
 import com.martonbot.dnem.Constants;
-import com.martonbot.dnem.DnemActivity;
+import com.martonbot.dnem.Dnem;
 import com.martonbot.dnem.DnemApplication;
 import com.martonbot.dnem.DnemDatabase.Activity;
 import com.martonbot.dnem.DnemDatabase.Schedule;
@@ -31,7 +31,7 @@ public class EditActivity extends android.app.Activity {
     private Switch allowStarsSwitch;
     private ImageButton deleteButton;
 
-    private DnemActivity activity;
+    private Dnem dnem;
     private int action;
 
     @Override
@@ -44,7 +44,7 @@ public class EditActivity extends android.app.Activity {
 
         setContentView(R.layout.activity_edit);
 
-        activity = activityId != 0 ? ((DnemApplication) getApplicationContext()).getDnemList().getDnem(activityId) : null;
+        dnem = activityId != 0 ? ((DnemApplication) getApplicationContext()).getDnemList().getDnem(activityId) : null;
 
         // set the controls
         cancelButton = findViewById(R.id.cancel_button);
@@ -56,11 +56,11 @@ public class EditActivity extends android.app.Activity {
         deleteButton = findViewById(R.id.delete_button);
 
         // populate the fields from the database if the activity ID was passed
-        if (activity != null) {
-            labelEdit.setText(activity.getLabel());
-            detailsEdit.setText(activity.getDetails());
-            scheduleActivitySwitch.setChecked(activity.isActive());
-            allowStarsSwitch.setChecked(activity.allowStars());
+        if (dnem != null) {
+            labelEdit.setText(dnem.getLabel());
+            detailsEdit.setText(dnem.getDetails());
+            scheduleActivitySwitch.setChecked(dnem.isActive());
+            allowStarsSwitch.setChecked(dnem.allowStars());
         }
 
         // controls listeners
@@ -125,7 +125,7 @@ public class EditActivity extends android.app.Activity {
         }
 
         if (success) {
-            ((DnemApplication) getApplicationContext()).getDnemList().onDnemInserted(EditActivity.this, newDnemId);
+            ((DnemApplication) getApplicationContext()).getDnemList().onDnemInserted(newDnemId);
         }
     }
 
@@ -134,7 +134,7 @@ public class EditActivity extends android.app.Activity {
      */
     private void updateDnem() {
         boolean success = false;
-        long activityId = activity.getId();
+        long activityId = dnem.getId();
 
         String activitySelection = Activity._ID + " = ?";
         String[] activitySelectionArgs = {
@@ -174,13 +174,13 @@ public class EditActivity extends android.app.Activity {
         }
 
         if (success) {
-            ((DnemApplication) getApplicationContext()).getDnemList().onDnemUpdated(EditActivity.this, activityId);
+            ((DnemApplication) getApplicationContext()).getDnemList().onDnemUpdated(activityId);
         }
 
     }
 
-    private void deleteActivity() {
-        long activityId = activity.getId();
+    private void deleteDnem() {
+        long activityId = dnem.getId();
         String activitySelection = Activity._ID + " = ?";
         String[] activitySelectionArgs = {
                 "" + activityId
@@ -195,7 +195,6 @@ public class EditActivity extends android.app.Activity {
         db.close();
 
         ((DnemApplication) getApplicationContext()).getDnemList().onDnemDeleted(activityId);
-
     }
 
     private class SaveButtonOnClickListener implements View.OnClickListener {
@@ -250,8 +249,8 @@ public class EditActivity extends android.app.Activity {
                 case DialogInterface.BUTTON_POSITIVE:
 
                     // delete the activity if it exists
-                    if (activity != null) {
-                        deleteActivity();
+                    if (dnem != null) {
+                        deleteDnem();
                     }
 
                     // go directly to the main activity

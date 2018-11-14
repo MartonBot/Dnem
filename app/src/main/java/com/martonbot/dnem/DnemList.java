@@ -11,20 +11,37 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * This is a singleton class representing the core data of the application: a list of Dnems. Each Dnem has its own set of tracking logs.
+ */
 public class DnemList {
 
-    private List<DnemActivity> dnems;
-    private List<DnemActivity> filteredDnems;
+    private List<Dnem> dnems;
+    private List<Dnem> filteredDnems;
+    private DnemApplication applicationContext;
 
     DnemList(Context context) {
+        this.applicationContext = (DnemApplication) context.getApplicationContext();
         dnems = new LinkedList<>();
         filteredDnems = new LinkedList<>();
-        loadDnemsFromDb(context);
+        loadDnemsFromDatabase();
     }
 
-    private void loadDnemsFromDb(Context context) {
+    /**
+     * Retrieve the list of dnems.
+     * @return
+     */
+    public List<Dnem> getDnems() {
+        return dnems;
+    }
+
+    /**
+     * This method triggers the loading of all the Dnems and their tracking logs from the database.
+     */
+    private void loadDnemsFromDatabase() {
+        SQLiteDatabase db = new DnemDbHelper(applicationContext).getReadableDatabase();
+
         // todo do this in another thread :)
-        SQLiteDatabase db = new DnemDbHelper(context).getReadableDatabase();
         Cursor cursor = db.query(
                 DnemDbHelper.activitiesTable,
                 DnemDbHelper.activitiesProjectionIdOnly,
@@ -38,22 +55,26 @@ public class DnemList {
         while (cursor.moveToNext()) {
             int idIndex = cursor.getColumnIndex(DnemDatabase.Activity._ID);
             long dnemId = cursor.getLong(idIndex);
-            DnemActivity activity = new DnemActivity(dnemId);
-            dnems.add(activity);
+            Dnem dnem = new Dnem(dnemId, applicationContext);
+            dnems.add(dnem);
         }
         cursor.close();
-        db.close();
 
         // now we load each dnem
-        for (DnemActivity dnem : dnems) {
-            dnem.loadFromDb(context);
+        for (Dnem dnem : dnems) {
+            dnem.loadFromDatabase(db);
         }
+
+        db.close();
     }
 
+    /**
+     * This method sorts the Dnems in the list, according to the rules implemented in the comparator.
+     */
     public void sortDnems() {
-        Collections.sort(dnems, new Comparator<DnemActivity>() {
+        Collections.sort(dnems, new Comparator<Dnem>() {
             @Override
-            public int compare(DnemActivity dnem1, DnemActivity dnem2) {
+            public int compare(Dnem dnem1, Dnem dnem2) {
                 int result = 0;
                 boolean done1 = dnem1.isDoneForToday();
                 boolean done2 = dnem2.isDoneForToday();
@@ -68,26 +89,13 @@ public class DnemList {
         });
     }
 
-    /**
-     * Retrieve the list of dnems.
-     *
-     * @return
-     */
-    public List<DnemActivity> getDnems() {
-        return dnems;
-    }
-
-
-    public List<DnemActivity> getFilteredDnems() {
+    public List<Dnem> getFilteredDnems() {
         return filteredDnems;
     }
 
-    public DnemActivity getDnem(long dnemId) {
-        if (dnems == null) {
-            throw new IllegalStateException("The dnems must be loaded before using them");
-        }
-        DnemActivity dnem = null;
-        for (DnemActivity d : dnems) {
+    public Dnem getDnem(long dnemId) {
+        Dnem dnem = null;
+        for (Dnem d : dnems) {
             if (d.getId() == dnemId) {
                 dnem = d;
                 break;
@@ -98,28 +106,44 @@ public class DnemList {
 
     public void applyFilters(List<Filter> filters) {
         filteredDnems.clear();
-        for (DnemActivity dnem : dnems) {
+        for (Dnem dnem : dnems) {
+            boolean pass = true;
             for (Filter filter : filters) {
-                if (filter.evaluate(dnem)) {
-                    filteredDnems.add(dnem);
+                if (!filter.evaluate(dnem)) {
+                    pass = false;
                 }
+            }
+            if (pass) {
+                filteredDnems.add(dnem);
             }
         }
     }
 
-    public void onDnemInserted(Context context, long dnemId) {
-        DnemActivity activity = new DnemActivity(dnemId);
-        dnems.add(activity);
-        activity.loadFromDb(context);
+    /**
+     * Callback method to notify that a new Dnem has been inserted in the database so that the DnemList can update itself to reflect that.
+     * @param dnemId
+     */
+    public void onDnemInserted(long dnemId) {
+        Dnem dnem = new Dnem(dnemId, applicationContext);
+        dnems.add(dnem);
+        dnem.loadFromDatabase();
     }
 
-    public void onDnemDeleted(long activityId) {
-        dnems.remove(getDnem(activityId));
+    /**
+     * Callback method to notify that a new Dnem has been deleted from the database so that the DnemList can update itself to reflect that.
+     * @param dnemId
+     */
+    public void onDnemDeleted(long dnemId) {
+        dnems.remove(getDnem(dnemId));
     }
 
-    public void onDnemUpdated(Context context, long dnemId) {
-        DnemActivity dnem = getDnem(dnemId);
-        dnem.loadFromDb(context);
+    /**
+     *      * Callback method to notify that a new Dnem has been updated in the database so that the DnemList can update itself to reflect that.
+     * @param dnemId
+     */
+    public void onDnemUpdated(long dnemId) {
+        Dnem dnem = getDnem(dnemId);
+        dnem.loadFromDatabase();
     }
 
 }

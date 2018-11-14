@@ -29,7 +29,7 @@ public class DnemDatabase {
         public static final String C_UTC_DAY = "utc_day";
         public static final String C_TIMEZONE = "timezone";
         public static final String C_TIMESTAMP = "timestamp";
-        public static final String I_ACTIVITY_TIMESTAMP = "index_activity_timestamp";
+        public static final String I_TIMESTAMP = "index_activity_timestamp";
     }
 
     static final String SQL_CREATE_ACTIVITY =
@@ -62,7 +62,7 @@ public class DnemDatabase {
                     " UNIQUE (" + TrackingLog.C_ACTIVITY_ID + ", " + TrackingLog.C_UTC_DAY + ", " + TrackingLog.C_TIMEZONE + "))";
 
     static final String SQL_CREATE_INDEX_TRACKING_LOG =
-            "CREATE UNIQUE INDEX " + TrackingLog.I_ACTIVITY_TIMESTAMP + " ON " + TrackingLog.T_NAME + "(" + TrackingLog.C_ACTIVITY_ID + ", " + TrackingLog.C_TIMESTAMP + ")";
+            "CREATE UNIQUE INDEX " + TrackingLog.I_TIMESTAMP + " ON " + TrackingLog.T_NAME + "(" + TrackingLog.C_ACTIVITY_ID + ", " + TrackingLog.C_TIMESTAMP + ")";
 
     static final String SQL_DELETE_ACTIVITY =
             "DROP TABLE IF EXISTS " + Activity.T_NAME;

@@ -1,6 +1,6 @@
 package com.martonbot.dnem.filters;
 
-import com.martonbot.dnem.DnemActivity;
+import com.martonbot.dnem.Dnem;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -17,14 +17,14 @@ public abstract class DnemFilter {
         isOn = on;
     }
 
-    abstract boolean evaluate(DnemActivity activity);
+    abstract boolean evaluate(Dnem activity);
 
-    public List<DnemActivity> filter (List<DnemActivity> list) {
+    public List<Dnem> filter (List<Dnem> list) {
         if (!isOn) {
             return list;
         }
-        List<DnemActivity> filteredList = new LinkedList<>();
-        for (DnemActivity activity : list) {
+        List<Dnem> filteredList = new LinkedList<>();
+        for (Dnem activity : list) {
             if (evaluate(activity)) {
                 filteredList.add(activity);
             }

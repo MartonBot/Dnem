@@ -12,12 +12,12 @@ import com.martonbot.dnem.activities.UpdatableActivity;
 
 public class OnDoneClickListener implements ImageButton.OnClickListener {
 
-    private DnemActivity dnem;
+    private Dnem dnem;
     private UpdatableActivity updatableActivity;
     private Context context;
 
     // todo change parameter, pass adapter instead
-    public OnDoneClickListener(Context context, UpdatableActivity updatableActivity, DnemActivity activity) {
+    public OnDoneClickListener(Context context, UpdatableActivity updatableActivity, Dnem activity) {
         this.dnem = activity;
         this.context = context;
 

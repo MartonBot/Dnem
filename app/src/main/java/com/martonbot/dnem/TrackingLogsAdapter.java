@@ -19,9 +19,9 @@ public class TrackingLogsAdapter extends BaseAdapter {
     private List<DnemTrackingLog> trackingLogs;
     private Context context;
     private UpdatableActivity updatableActivity;
-    private DnemActivity activity;
+    private Dnem activity;
 
-    public TrackingLogsAdapter(UpdatableActivity updatableActivity, DnemActivity activity) {
+    public TrackingLogsAdapter(UpdatableActivity updatableActivity, Dnem activity) {
         this.context = updatableActivity;
         this.trackingLogs = activity.trackingLogs;
         this.activity = activity;

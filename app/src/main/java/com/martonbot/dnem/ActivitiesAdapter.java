@@ -18,11 +18,11 @@ import java.util.List;
 public class ActivitiesAdapter extends BaseAdapter {
     // todo rename to DnemsAdapter
 
-    private List<DnemActivity> dnems;
+    private List<Dnem> dnems;
     private Context context;
     private UpdatableActivity updatableActivity;
 
-    public ActivitiesAdapter(Context context, UpdatableActivity updatableActivity, List<DnemActivity> dnems) {
+    public ActivitiesAdapter(Context context, UpdatableActivity updatableActivity, List<Dnem> dnems) {
         this.context = context;
         this.dnems = dnems;
         this.updatableActivity = updatableActivity;
@@ -46,7 +46,7 @@ public class ActivitiesAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
-        DnemActivity activity = dnems.get(position);
+        Dnem activity = dnems.get(position);
 
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
