@@ -1,4 +1,4 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.adapters;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -8,7 +8,12 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.martonbot.dnem.R;
+import com.martonbot.dnem.UiUpdater;
 import com.martonbot.dnem.activities.UpdatableActivity;
+import com.martonbot.dnem.data.Dnem;
+import com.martonbot.dnem.listeners.OnActivityClickListener;
+import com.martonbot.dnem.listeners.OnDoneClickListener;
 
 import java.util.List;
 

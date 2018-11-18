@@ -12,13 +12,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.martonbot.dnem.Constants;
-import com.martonbot.dnem.Dnem;
+import com.martonbot.dnem.data.Dnem;
 import com.martonbot.dnem.DnemApplication;
-import com.martonbot.dnem.OnDoneClickListener;
+import com.martonbot.dnem.data.TrackingLog;
+import com.martonbot.dnem.listeners.OnDoneClickListener;
 import com.martonbot.dnem.R;
 import com.martonbot.dnem.Time;
-import com.martonbot.dnem.TrackingLogs;
-import com.martonbot.dnem.TrackingLogsAdapter;
+import com.martonbot.dnem.adapters.TrackingLogsAdapter;
 import com.martonbot.dnem.UiUpdater;
 
 import org.joda.time.Duration;
@@ -121,7 +121,8 @@ public class ViewActivity extends UpdatableActivity {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE:
                     long yesterdayTimestamp = new Instant().minus(Duration.standardDays(1)).getMillis();
-                    TrackingLogs.insert(dnem, ViewActivity.this, yesterdayTimestamp);
+                    TrackingLog trackingLog = new TrackingLog(dnem, yesterdayTimestamp);
+                    dnem.insert(ViewActivity.this, trackingLog);
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;

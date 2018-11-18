@@ -1,10 +1,12 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.listeners;
 
 import android.content.Context;
 import android.content.Intent;
 import android.view.View;
 
+import com.martonbot.dnem.Constants;
 import com.martonbot.dnem.activities.ViewActivity;
+import com.martonbot.dnem.data.Dnem;
 
 /**
  * Created by mgrihangne on 3/07/2017.

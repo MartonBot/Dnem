@@ -1,11 +1,11 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.data;
 
 import android.support.annotation.NonNull;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDate;
 
-public class DnemTrackingLog implements Comparable<DnemTrackingLog> {
+public class TrackingLog implements Comparable<TrackingLog> {
 
     private long id;
     private long activityId;
@@ -17,12 +17,23 @@ public class DnemTrackingLog implements Comparable<DnemTrackingLog> {
 
     private int streakCounter;
 
-    public DnemTrackingLog(long id, long activityId, long timestamp, LocalDate day, DateTimeZone timezone) {
+    public TrackingLog(long id, long activityId, long timestamp, LocalDate day, DateTimeZone timezone) {
         this.id = id;
         this.activityId = activityId;
         this.timestamp = timestamp;
         this.day = day;
         this.timezone = timezone;
+    }
+
+    public TrackingLog(Dnem dnem, long timestamp) {
+        DateTimeZone tz = DateTimeZone.getDefault();
+        LocalDate today = new LocalDate(timestamp, tz);
+
+        this.id = 0;
+        this.activityId = dnem.getId();
+        this.timestamp = timestamp;
+        this.day = today;
+        this.timezone = tz;
     }
 
     public long getActivityId() {
@@ -45,8 +56,12 @@ public class DnemTrackingLog implements Comparable<DnemTrackingLog> {
         return id;
     }
 
+    public void setId(long id) {
+        this.id = id;
+    }
+
     @Override
-    public int compareTo(@NonNull DnemTrackingLog tl) {
+    public int compareTo(@NonNull TrackingLog tl) {
         return Long.signum(this.timestamp - tl.timestamp);
     }
 

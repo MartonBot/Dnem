@@ -4,6 +4,8 @@ import android.content.Context;
 import android.view.View;
 import android.widget.TextView;
 
+import com.martonbot.dnem.data.Dnem;
+
 /**
  * This class is meant to provide methods to update the UI in multiple places across the app in a consistent way. For example, the "Done" button appears in both the Main activity (in the DnemDatabase activities list) and in the View activity.
  */

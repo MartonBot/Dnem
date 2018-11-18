@@ -15,12 +15,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.martonbot.dnem.ActivitiesAdapter;
+import com.martonbot.dnem.adapters.ActivitiesAdapter;
 import com.martonbot.dnem.Constants;
-import com.martonbot.dnem.Dnem;
+import com.martonbot.dnem.data.Dnem;
 import com.martonbot.dnem.DnemApplication;
 import com.martonbot.dnem.DnemChannels;
-import com.martonbot.dnem.DnemList;
+import com.martonbot.dnem.data.DnemList;
 import com.martonbot.dnem.Preferences;
 import com.martonbot.dnem.R;
 import com.martonbot.dnem.filters.Filter;
@@ -66,8 +66,9 @@ public class MainActivity extends UpdatableActivity {
         onFirstRun();
 
         // get the list of Dnems from the application context
-        // todo this should be done in a background thread
+        // todo this should be done in an async task
         dnemList = ((DnemApplication) getApplicationContext()).getDnemList();
+        dnemList.load(MainActivity.this);
 
         // UI elements
         listView = findViewById(R.id.listView);
@@ -90,7 +91,6 @@ public class MainActivity extends UpdatableActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        dnemList.sortDnems();
         applyFilters();
     }
 

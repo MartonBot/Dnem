@@ -1,12 +1,12 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.martonbot.dnem.DnemDatabase.Activity;
-import com.martonbot.dnem.DnemDatabase.Schedule;
-import com.martonbot.dnem.DnemDatabase.TrackingLog;
+import com.martonbot.dnem.database.DnemDatabase.Activity;
+import com.martonbot.dnem.database.DnemDatabase.Schedule;
+import com.martonbot.dnem.database.DnemDatabase.TrackingLog;
 
 public class DnemDbHelper extends SQLiteOpenHelper {
 
@@ -14,7 +14,7 @@ public class DnemDbHelper extends SQLiteOpenHelper {
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "Dnem.db";
 
-    static final String activitiesJoinTable = Activity.T_NAME
+    public static final String activitiesJoinTable = Activity.T_NAME
             + " JOIN "
             + Schedule.T_NAME
             + " ON " + Activity.T_NAME + "." + Activity._ID
@@ -24,13 +24,13 @@ public class DnemDbHelper extends SQLiteOpenHelper {
             + " ON " + Activity.T_NAME + "." + Activity._ID
             + " = " + TrackingLog.T_NAME + "." + TrackingLog.C_ACTIVITY_ID;
 
-    static final String activitiesTable = Activity.T_NAME;
+    public static final String activitiesTable = Activity.T_NAME;
 
-    static final String[] activitiesProjectionIdOnly = {
+    public static final String[] activitiesProjectionIdOnly = {
             Activity.T_NAME + "." + Activity._ID
     };
 
-    static final String[] activitiesProjection = {
+    public static final String[] activitiesProjection = {
             Activity.T_NAME + "." + Activity._ID,
             Activity.C_LABEL,
             Activity.C_DETAILS,
@@ -39,9 +39,9 @@ public class DnemDbHelper extends SQLiteOpenHelper {
             Schedule.C_WEEKENDS_ON
     };
 
-    static final String activitiesGroupBy = Activity.T_NAME + "." + Activity._ID;
+    public static final String activitiesGroupBy = Activity.T_NAME + "." + Activity._ID;
 
-    static final String activitiesOrderBy = Activity.C_LABEL + " ASC";
+    public static final String activitiesOrderBy = Activity.C_LABEL + " ASC";
 
     public DnemDbHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);

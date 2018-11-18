@@ -1,4 +1,4 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.listeners;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -9,6 +9,10 @@ import android.view.View;
 import android.widget.ImageButton;
 
 import com.martonbot.dnem.activities.UpdatableActivity;
+import com.martonbot.dnem.data.Dnem;
+import com.martonbot.dnem.data.TrackingLog;
+
+import org.joda.time.Instant;
 
 public class OnDoneClickListener implements ImageButton.OnClickListener {
 
@@ -29,17 +33,18 @@ public class OnDoneClickListener implements ImageButton.OnClickListener {
     public void onClick(View v) {
         boolean isDoneForToday = dnem.isDoneForToday();
         if (isDoneForToday) {
-            DnemTrackingLog trackingLog = dnem.getTodayTrackingLog();
-            long trackingLogId = trackingLog.getId();
+            TrackingLog trackingLog = dnem.getTodayTrackingLog();
             AlertDialog.Builder adBuilder = new AlertDialog.Builder(context);
-            ConfirmUndoClickListener confirmUndoClickListener = new ConfirmUndoClickListener(trackingLogId);
+            ConfirmUndoClickListener confirmUndoClickListener = new ConfirmUndoClickListener(trackingLog);
             adBuilder.setMessage("Undo for today?").setPositiveButton("Yup", confirmUndoClickListener).setNegativeButton("Nope", confirmUndoClickListener).show();
         } else {
             // insert the tracking log
-            TrackingLogs.insert(dnem, updatableActivity);
+            TrackingLog trackingLog = new TrackingLog(dnem, Instant.now().getMillis());
+            dnem.insert(context, trackingLog);
+
             Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-            // Vibrate for 200 milliseconds
-            vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE));
+            // Vibrate for 100 milliseconds
+            vibrator.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE));
 
         }
     }
@@ -47,17 +52,17 @@ public class OnDoneClickListener implements ImageButton.OnClickListener {
     // todo maybe get this class outside
     private class ConfirmUndoClickListener implements DialogInterface.OnClickListener {
 
-        private long trackingLogId;
+        private TrackingLog trackingLog;
 
-        public ConfirmUndoClickListener(long trackingLogId) {
-            this.trackingLogId = trackingLogId;
+        public ConfirmUndoClickListener(TrackingLog trackingLog) {
+            this.trackingLog = trackingLog;
         }
 
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE:
-                    TrackingLogs.delete(trackingLogId, dnem, updatableActivity);
+                    dnem.delete(context, trackingLog);
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;

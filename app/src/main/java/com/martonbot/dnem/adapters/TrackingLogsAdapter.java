@@ -1,4 +1,4 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.adapters;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -10,22 +10,23 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.martonbot.dnem.R;
 import com.martonbot.dnem.activities.UpdatableActivity;
+import com.martonbot.dnem.data.Dnem;
+import com.martonbot.dnem.data.TrackingLog;
 
 import java.util.List;
 
 public class TrackingLogsAdapter extends BaseAdapter {
 
-    private List<DnemTrackingLog> trackingLogs;
+    private List<TrackingLog> trackingLogs;
     private Context context;
-    private UpdatableActivity updatableActivity;
-    private Dnem activity;
+    private Dnem dnem;
 
-    public TrackingLogsAdapter(UpdatableActivity updatableActivity, Dnem activity) {
+    public TrackingLogsAdapter(UpdatableActivity updatableActivity, Dnem dnem) {
         this.context = updatableActivity;
-        this.trackingLogs = activity.trackingLogs;
-        this.activity = activity;
-        this.updatableActivity = updatableActivity;
+        this.trackingLogs = dnem.trackingLogs;
+        this.dnem = dnem;
     }
 
     @Override
@@ -45,7 +46,7 @@ public class TrackingLogsAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        DnemTrackingLog trackingLog = trackingLogs.get(position);
+        TrackingLog trackingLog = trackingLogs.get(position);
 
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.tracking_log_item, parent, false);
@@ -75,23 +76,25 @@ public class TrackingLogsAdapter extends BaseAdapter {
         }
         starImage.setBackground(context.getDrawable(starBackground));
 
-        convertView.setOnLongClickListener(new OnTrackingLogLongClickListener(trackingLog.getId()));
+        convertView.setOnLongClickListener(new OnTrackingLogLongClickListener(trackingLog, dnem));
 
         return convertView;
     }
 
     private class OnTrackingLogLongClickListener implements View.OnLongClickListener {
 
-        private long trackingLogId;
+        private TrackingLog trackingLog;
+        private Dnem dnem;
 
-        OnTrackingLogLongClickListener(long trackingLogId) {
-            this.trackingLogId = trackingLogId;
+        OnTrackingLogLongClickListener(TrackingLog trackingLog, Dnem dnem) {
+            this.trackingLog = trackingLog;
+            this.dnem = dnem;
         }
 
         @Override
         public boolean onLongClick(View view) {
             AlertDialog.Builder adBuilder = new AlertDialog.Builder(context);
-            ConfirmDeleteClickListener confirmDeleteClickListener = new ConfirmDeleteClickListener(trackingLogId);
+            ConfirmDeleteClickListener confirmDeleteClickListener = new ConfirmDeleteClickListener(trackingLog, dnem);
             adBuilder.setMessage("Do you really want to delete this log? It cannot be undone.").setPositiveButton("Do it!", confirmDeleteClickListener).setNegativeButton("Never mind", confirmDeleteClickListener).show();
             return false;
         }
@@ -99,17 +102,19 @@ public class TrackingLogsAdapter extends BaseAdapter {
 
     private class ConfirmDeleteClickListener implements DialogInterface.OnClickListener {
 
-        private long trackingLogId;
+        private TrackingLog trackingLog;
+        private Dnem dnem;
 
-        ConfirmDeleteClickListener(long trackingLogId) {
-            this.trackingLogId = trackingLogId;
+        ConfirmDeleteClickListener(TrackingLog trackingLog, Dnem dnem) {
+            this.trackingLog = trackingLog;
+            this.dnem = dnem;
         }
 
         @Override
         public void onClick(DialogInterface dialogInterface, int which) {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE:
-                    TrackingLogs.delete(trackingLogId, activity, updatableActivity);
+                    dnem.delete(context, trackingLog);
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;

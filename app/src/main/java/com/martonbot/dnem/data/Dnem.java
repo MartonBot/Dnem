@@ -1,8 +1,13 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.data;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+
+import com.martonbot.dnem.Time;
+import com.martonbot.dnem.database.DnemDatabase;
+import com.martonbot.dnem.database.DnemDbHelper;
 
 import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
@@ -18,8 +23,7 @@ import java.util.List;
  */
 public class Dnem {
 
-    List<DnemTrackingLog> trackingLogs;
-    private DnemApplication applicationContext;
+    public List<TrackingLog> trackingLogs;
 
     private long id;
     private String label;
@@ -34,36 +38,26 @@ public class Dnem {
     // todo weekends on
     // todo remindersOn
 
-    public Dnem(long id, DnemApplication applicationContext) {
+    public Dnem(long id) {
         this.id = id;
-        this.applicationContext = applicationContext;
         this.trackingLogs = new LinkedList<>();
     }
 
     /**
      * This method triggers the loading of the Dnem information and tracking logs from the database.
      */
-    public void loadFromDatabase(SQLiteDatabase db) {
+    void loadFromDatabase(SQLiteDatabase db) {
         // load info
         loadInfoFromDatabase(db);
         // load tracking logs
         loadTrackingLogsFromDb(db);
-    }
-
-    /**
-     * This method triggers the loading of the Dnem information and tracking logs from the database.
-     */
-    public void loadFromDatabase() {
-        SQLiteDatabase db = new DnemDbHelper(applicationContext).getReadableDatabase();
-        // load info
-        loadInfoFromDatabase(db);
-        // load tracking logs
-        loadTrackingLogsFromDb(db);
-        db.close();
+        // process the tracking logs to get the streak, stars etc
+        processTrackingLogs();
     }
 
     /**
      * This method populates the fields of the Dnem with the values pulled from a database. The Dnem must already be instantiated.
+     *
      * @param db the database to use
      */
     private void loadInfoFromDatabase(SQLiteDatabase db) {
@@ -138,39 +132,16 @@ public class Dnem {
             DateTimeZone timezone = DateTimeZone.forID(cursor.getString(timezoneIndex));
             long timestamp = cursor.getLong(timestampIndex);
             LocalDate day = new LocalDate(cursor.getString(dayIndex));
-            DnemTrackingLog trackingLog = new DnemTrackingLog(trackingLogId, id, timestamp, day, timezone);
+            TrackingLog trackingLog = new TrackingLog(trackingLogId, id, timestamp, day, timezone);
             trackingLogs.add(trackingLog);
         }
         cursor.close();
-
-        // process them
-        processTrackingLogs();
-    }
-
-    public long getId() {
-        return id;
-    }
-
-    public String getLabel() {
-        return label;
-    }
-
-    public String getDetails() {
-        return details;
-    }
-
-    public int getCurrentStreak() {
-        return currentStreak;
-    }
-
-    public int getBestStreak() {
-        return bestStreak;
     }
 
     private void processTrackingLogs() {
         Collections.sort(trackingLogs);
         computeStreaks();
-        Collections.sort(trackingLogs, Collections.<DnemTrackingLog>reverseOrder());
+        Collections.sort(trackingLogs, Collections.<TrackingLog>reverseOrder());
     }
 
     private void computeStreaks() {
@@ -184,11 +155,11 @@ public class Dnem {
         int starCounter = 0; // a stack that increments with consecutive logs but is lost when streak is broken
 
         // start from the first tracking log
-        DnemTrackingLog previousLog = null;
+        TrackingLog previousLog = null;
         boolean isFirstTrackingLog = true;
 
         // iterate through all the tracking logs in ascending order
-        for (DnemTrackingLog currentLog : trackingLogs) {
+        for (TrackingLog currentLog : trackingLogs) {
             if (isFirstTrackingLog) {
                 // initialisation
                 runningStreak = 1; // we start at 1 because there is a tracking log for that day
@@ -305,12 +276,121 @@ public class Dnem {
         return remainder;
     }
 
-    private int daysMissed(DnemTrackingLog currentLog, DnemTrackingLog previousLog) {
+    private int daysMissed(TrackingLog currentLog, TrackingLog previousLog) {
         return Time.daysMissed(currentLog.getTimestamp(), currentLog.getTimezone(), previousLog.getTimestamp(), previousLog.getTimezone());
     }
 
-    private int daysMissed(long todayStamp, DateTimeZone todayZone, DnemTrackingLog previousLog) {
+    private int daysMissed(long todayStamp, DateTimeZone todayZone, TrackingLog previousLog) {
         return Time.daysMissed(todayStamp, todayZone, previousLog.getTimestamp(), previousLog.getTimezone());
+    }
+
+
+    public TrackingLog getTodayTrackingLog() {
+        TrackingLog tl = null;
+        if (trackingLogs != null && trackingLogs.size() > 0) {
+            TrackingLog mostRecentTrackingLog = getMostRecentTrackingLog();
+            DateTimeZone timezone = mostRecentTrackingLog.getTimezone();
+            long timestamp = mostRecentTrackingLog.getTimestamp();
+            if (new LocalDate(timestamp, timezone).equals(Time.today())) {
+                tl = mostRecentTrackingLog;
+            }
+        }
+        return tl;
+    }
+
+    public int getStarCounter() {
+        return starCounter;
+    }
+
+    private TrackingLog getMostRecentTrackingLog() {
+        return trackingLogs.get(0);
+    }
+
+    public boolean trackingLogFor(LocalDate date) {
+        for (TrackingLog tl : trackingLogs) {
+            if (tl.getDay().equals(date)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * This method should be called when inserting a new tracking log in the database, so that it is also added to the corresponding Dnem.
+     */
+    public void insert(Context context, TrackingLog trackingLog) {
+        if (trackingLog.getId() != 0) {
+            throw new IllegalStateException("Illegal insertion of existing tracking log");
+        }
+        if (trackingLog.getActivityId() != this.getId()) {
+            throw new IllegalStateException("Illegal insertion of a tracking log for the wrong Dnem");
+        }
+
+        DateTimeZone timezone = DateTimeZone.getDefault();
+        LocalDate today = new LocalDate(trackingLog.getTimestamp(), timezone);
+
+        ContentValues trackingLogValues = buildTrackingLogContentValues(trackingLog);
+
+        // insert
+        SQLiteDatabase db = new DnemDbHelper(context).getWritableDatabase();
+        long newTrackingLogId = db.insertOrThrow(DnemDatabase.TrackingLog.T_NAME, null, trackingLogValues);
+        trackingLog.setId(newTrackingLogId);
+        db.close(); // todo handle the possible exception and close in a finally?
+
+        trackingLogs.add(trackingLog);
+        processTrackingLogs();
+    }
+
+    public void delete(Context context, TrackingLog trackingLog) {
+        long trackingLogId = trackingLog.getId();
+        if (trackingLog.getId() == 0) {
+            throw new IllegalStateException("Illegal deletion of inexisting tracking log");
+        }
+        String where = DnemDatabase.TrackingLog._ID + " =? ";
+        String[] whereArgs = new String[]{
+                "" + trackingLogId
+        };
+
+        // delete
+        SQLiteDatabase db = new DnemDbHelper(context).getWritableDatabase();
+        db.delete(
+                DnemDatabase.TrackingLog.T_NAME,
+                where,
+                whereArgs
+        );
+        db.close();
+
+        trackingLogs.remove(trackingLog);
+        processTrackingLogs();
+    }
+
+    private ContentValues buildTrackingLogContentValues(TrackingLog trackingLog) {
+        ContentValues trackingLogValues = new ContentValues();
+        trackingLogValues.put(DnemDatabase.TrackingLog.C_ACTIVITY_ID, trackingLog.getActivityId()); // we set the foreign key
+        trackingLogValues.put(DnemDatabase.TrackingLog.C_TIMESTAMP, trackingLog.getTimestamp()); // we set the current instant
+        trackingLogValues.put(DnemDatabase.TrackingLog.C_UTC_DAY, trackingLog.getDay().toString()); // we set the local date
+        trackingLogValues.put(DnemDatabase.TrackingLog.C_TIMEZONE, trackingLog.getTimezone().getID()); // we set the local timezone
+        return trackingLogValues;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+
+    public String getDetails() {
+        return details;
+    }
+
+    public int getCurrentStreak() {
+        return currentStreak;
+    }
+
+    public int getBestStreak() {
+        return bestStreak;
     }
 
     public boolean isActive() {
@@ -345,59 +425,8 @@ public class Dnem {
         this.id = id;
     }
 
-    boolean isDoneForToday() {
+    public boolean isDoneForToday() {
         return getTodayTrackingLog() != null;
-    }
-
-    public DnemTrackingLog getTodayTrackingLog() {
-        DnemTrackingLog tl = null;
-        if (trackingLogs != null && trackingLogs.size() > 0) {
-            DnemTrackingLog mostRecentTrackingLog = getMostRecentTrackingLog();
-            DateTimeZone timezone = mostRecentTrackingLog.getTimezone();
-            long timestamp = mostRecentTrackingLog.getTimestamp();
-            if (new LocalDate(timestamp, timezone).equals(Time.today())) {
-                tl = mostRecentTrackingLog;
-            }
-        }
-        return tl;
-    }
-
-    int getStarCounter() {
-        return starCounter;
-    }
-
-    private DnemTrackingLog getMostRecentTrackingLog() {
-        return trackingLogs.get(0);
-    }
-
-    public boolean trackingLogFor(LocalDate date) {
-        for (DnemTrackingLog tl : trackingLogs) {
-            if (tl.getDay().equals(date)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * This method should be called when inserting a new tracking log in the database, so that the DnemDatabase activity it belongs to can reload its tracking logs from the database and process them.
-     *
-     * @param context the context from which the method is called
-     */
-    public void onTrackingLogInserted(Context context) {
-        // a tracking log has been inserted for this activity
-        // we need to reload all the tracking logs for this activity
-        SQLiteDatabase db = new DnemDbHelper(context).getReadableDatabase();
-        loadTrackingLogsFromDb(db);
-        db.close();
-
-    }
-
-    public void onTrackingLogDeleted(Context context) {
-        // todo we could just remove it from the list instead of doing a whole reload of the database
-        SQLiteDatabase db = new DnemDbHelper(context).getReadableDatabase();
-        loadTrackingLogsFromDb(db);
-        db.close();
     }
 
 }

@@ -1,4 +1,4 @@
-package com.martonbot.dnem;
+package com.martonbot.dnem.database;
 
 import android.provider.BaseColumns;
 

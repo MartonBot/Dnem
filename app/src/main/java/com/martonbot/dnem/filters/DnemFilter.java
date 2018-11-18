@@ -1,6 +1,6 @@
 package com.martonbot.dnem.filters;
 
-import com.martonbot.dnem.Dnem;
+import com.martonbot.dnem.data.Dnem;
 
 import java.util.LinkedList;
 import java.util.List;
