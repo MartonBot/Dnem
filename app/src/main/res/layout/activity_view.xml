@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content"
                 android:layout_toStartOf="@id/restore_button"
                 android:layout_centerVertical="true"
-                android:src="@drawable/ic_edit_black_24dp" />
+                android:src="@drawable/ic_baseline_edit_24px" />
 
             <ImageButton
                 android:id="@+id/restore_button"
